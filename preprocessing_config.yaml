@@ -1,0 +1,18 @@
+start: "2023-05-10T00:00:00-00:00"
+end: "2023-07-27T23:59:59-00:00"
+dump_folder: /home/jimena/work/data/fundpet/linkfluence_petitioning_fundraising
+export_folder: /home/jimena/work/data/fundpet/scrapping
+ignored_domains:
+  - twitter.com
+  - youtube.com
+  - youtu.be
+  - google.com
+  - instagram.com
+  - facebook.com
+  - fb.me
+  - paypal.me
+  - paypal.com
+domains_to_preresolve:
+  - bit.ly
+  - chng.it
+domain_freq_threshold: 100
