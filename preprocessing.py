@@ -28,31 +28,33 @@ DOMAINNAMETHRESHOLD = config['domain_freq_threshold']
 DOMAINSTORESOLVE = config['domains_to_preresolve']
 IGNOREDOMAINS = config['ignored_domains']
 
-# (0) Load linkfluence dump
-df = pd.read_csv(DUMPPATH, dtype=str)
+# (0) Load linkfluence dump and standarize url column name
+df = pd.read_csv(DUMPPATH, dtype=str) \
+    .rename(columns={externalUrl: 'externalUrl'})
 n0 = len(df)
-df = df[~ df[externalUrl].isna()]
-df = df[~ (df[externalUrl] == "[]")]
+df = df[~ df['externalUrl'].isna()]
+df = df[~ (df['externalUrl'] == "[]")]
 n1 = len(df)
 print(f"Drop {n0 - n1} empty entry of {n0} in URL column, left {n1}.")
 
 
 # (1) Drop repeated URLs
-externalUrl_counts = df[externalUrl].value_counts()
+externalUrl_counts = df['externalUrl'].value_counts()
 externalUrl_counts = externalUrl_counts \
     .to_frame() \
     .reset_index() \
-    .rename(columns={"index": "externalUrl", "externalUrl": "count"})
+    .rename(columns={"index": "externalUrl", "externalUrl": "urlCount"})
 e1 = len(externalUrl_counts)
 print(f"""There are {e1} unique urls of a total of {n1} ({100*e1/n1:.2f}%),
-keeping only one entrie for each unique url.""")
-df = df.groupby(externalUrl).first().reset_index()
+keeping only one entry for each unique url.""")
+df = df.merge(externalUrl_counts, on='externalUrl')
+df = df.groupby('externalUrl').first().reset_index()
 # print("Most frequents Urls:")
 # print(externalUrl_counts.head(20))
 
 
 # (1) Get domain names from URLs and compute stats
-df = df.assign(domainName=df[externalUrl].apply(get_domain_name))
+df = df.assign(domainName=df['externalUrl'].apply(get_domain_name))
 
 
 # (2) Try to resolve shortened URLs and update domain names
@@ -62,12 +64,12 @@ def resolveUrls(df, domain):
     df = df.sort_values(by='domainName').reset_index().drop(columns=['index'])
     i0 = df[df.domainName == domain].index[0]
     i1 = df[df.domainName == domain].index[-1]
-    urls = df[df.domainName == domain][externalUrl].tolist()
+    urls = df[df.domainName == domain]['externalUrl'].tolist()
     print(f"Resolving {len(urls)} urls for domain '{domain}'.")
     resolved_urls = []
     for url in tqdm(urls):
         resolved_urls.append(minet.web.resolve(url=url)[1][-1].url)
-    df[externalUrl].loc[i0:i1] = resolved_urls
+    df['externalUrl'].loc[i0:i1] = resolved_urls
     resDomainNames = [get_domain_name(ru) for ru in resolved_urls]
     df['domainName'].loc[i0:i1] = resDomainNames
     return df
@@ -87,36 +89,52 @@ domainName_counts = df['domainName'].value_counts()
 domainName_counts = domainName_counts \
     .to_frame() \
     .reset_index() \
-    .rename(columns={"index": "domain", "domainName": "counts"})
+    .rename(columns={"index": "domain", "domainName": "domainCounts"})
 d1 = len(domainName_counts)
 print(f"There are {d1} unique domains.")
 
-urlNoProt = df[externalUrl].apply(
+urlNoProt = df['externalUrl'].apply(
     lambda url: url.replace('https://', '').replace('http://', ''))
 tmp = df.assign(urlNoProt=urlNoProt)
 c0 = (tmp.urlNoProt == tmp.domainName).sum()
 mssg = f"There are at least {c0} unique urls that are equal to their  \
-correspondant domain name."
+correspondent domain name."
 print(mssg)
 
 # print("Most frequents domain names counts:")
 # print(domainName_counts.head(20))
 
 # (4) Export full preprocessed file
-toKeep = ['uid', 'permalink', 'domainName', externalUrl]
-df = df[toKeep].sort_values(by='domainName')
+toKeep = ['uid', 'permalink', 'domainName', 'externalUrl', 'urlCount']
+df = df[toKeep].sort_values(by=['urlCount', 'domainName'], ascending=False)
 df.to_csv(OUTPATH, index=False)
 print(f"File save to {OUTPATH}")
 
-dc_outpath = os.path.join(OUTFOLDER,  f"domain_counts_{platform}.csv")
-domainName_counts.to_csv(dc_outpath, index=False)
-print(f"Domain counts saved at {dc_outpath}.")
+domainName_outpath = os.path.join(
+    OUTFOLDER,
+    f"postprecessed_domain_counts_{platform}.csv")
+domainName_counts.to_csv(domainName_outpath, index=False)
+print(f"Domain counts saved at {domainName_outpath}.")
+
+externalUrl_outpath = os.path.join(
+    OUTFOLDER,
+    f"original_urls_counts_{platform}.csv")
+externalUrl_counts = externalUrl_counts.merge(
+    df[['externalUrl', 'urlCount', 'domainName']],
+    on=['externalUrl', 'urlCount'])
+externalUrl_counts[['externalUrl', 'domainName','urlCount']] \
+    .to_csv(externalUrl_outpath, index=False)
+print(f"Domain counts saved at {externalUrl_outpath}.")
 
 
 # (5) Export preprocessed files by domain for most frquent domains
 print(f"Exporting data for domains with at least {DOMAINNAMETHRESHOLD} URLs.")
-is_most_freq_domain = domainName_counts.counts > DOMAINNAMETHRESHOLD
+is_most_freq_domain = domainName_counts.domainCounts > DOMAINNAMETHRESHOLD
 for t in domainName_counts[is_most_freq_domain].itertuples():
-    outpath = os.path.join(OUTFOLDER, f"toFetchUrl_{platform}__{t.domain}.csv")
+    domain_folder_path = os.path.join(OUTFOLDER, f"{t.domain}")
+    os.makedirs(domain_folder_path, exist_ok=True)
+    outpath = os.path.join(
+        domain_folder_path,
+        f"toFetchUrl_{platform}__{t.domain}.csv")
     df[df.domainName == t.domain].to_csv(outpath, index=False)
-    print(f"Save {t.counts} URLs to fecth at {outpath}.")
+    print(f"Save {t.domainCounts} URLs to fecth at {outpath}.")
