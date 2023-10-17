@@ -3,7 +3,6 @@
 platform=$1
 domain=$2
 
-
 # data preprocessing
 pyenv local linkfluence
 echo Preprocessing data for platform $platform
