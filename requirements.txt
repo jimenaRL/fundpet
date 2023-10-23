@@ -1,0 +1,4 @@
+pandas
+minet
+trafilatura
+beautifulsoup4
