@@ -1,4 +1,6 @@
+tqdm
+PyYAML
 pandas
-minet
+minet==0.66.2
 trafilatura
 beautifulsoup4
