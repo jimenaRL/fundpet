@@ -1,19 +1,23 @@
 #!/bin/bash
 
-platform=$1
-domain=$2
+client_id=$1
+client_secret=$2
 
-# data preprocessing
+# 0. set environement
+source conf.sh
 pyenv local linkfluence
-echo Preprocessing data for platform $platform
-python preprocessing.py --platform=$platform  --config=preprocessing_config.yaml
 
-# fetch websites
-echo Fetching sites of domain $domain
-minet fetch externalUrl /home/jimena/work/data/fundpet/scrapping/${domain}/toFetchUrl_${platform}__${domain}.csv \
---output /home/jimena/work/data/fundpet/scrapping/${domain}/fetchedUrl_${platform}__${domain}.csv \
---output-dir /home/jimena/work/data/fundpet/scrapping/${domain}/fechted \
---threads 100
+# 1. dump download
+# python get_dump.py --client_id=$client_id --client_secret=$client_secret
 
-# extarct content from fetched sites
-python scrappers/${domain}_scrapper.py
+# 2. preprocess dump
+python preprocessing.py --config=preprocessing_config.yaml
+
+# # fetch websites
+# minet fetch externalUrl /home/jimena/work/data/fundpet/scrapping/${domain}/toFetchUrl_${platform}__${domain}.csv \
+# --output /home/jimena/work/data/fundpet/scrapping/${domain}/fetchedUrl_${platform}__${domain}.csv \
+# --output-dir /home/jimena/work/data/fundpet/scrapping/${domain}/fechted \
+# --threads 100
+
+# # # extarct content from fetched sites
+# # python scrappers/${domain}_scrapper.py

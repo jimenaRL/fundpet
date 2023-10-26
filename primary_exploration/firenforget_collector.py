@@ -92,7 +92,7 @@ queries = {
 #     'ItalianFundraising':  385889,
 #     'ItalianPetitioning':  385888,
 #     'SpanishFundraising':  385891,
-    'SpanishPetitioning':  385890,
+    # 'SpanishPetitioning':  385890,
 }
 
 query_list = []
@@ -160,7 +160,12 @@ for platform in platforms:
             ignore_index=True) \
             .rename(columns={'user.id': 'twitter_id'}) \
             .to_csv(
-                '%s_%s_%s_start_%s_end_%s.csv.zip' % (query_name, query_id, platform, start_timestamp, end_timestamp),
+                '%s_%s_%s_start_%s_end_%s.csv.zip' % (
+                    query_name,
+                    query_id,
+                    platform,
+                    start_timestamp,
+                    end_timestamp),
                 index=False,
                 compression='zip')
 
@@ -178,14 +183,15 @@ for platform in platforms:
     #        lambda x: True if emotion in x else False)
 
     # platform_df.to_csv(
-    #    'full_%s__start_%s_end_%s.csv.zip' % (platform, start_timestamp, end_timestamp),
+    #    'full_%s__start_%s_end_%s.csv.zip' % (
+    #     platform, start_timestamp, end_timestamp),
     #    index=False,
     #    compression='zip')
 
     # platform_df[col_keep+emotions].to_csv(
-    #     'short_%s__start_%s_end_%s.csv.zip' % (platform, start_timestamp, end_timestamp),
+    #     'short_%s__start_%s_end_%s.csv.zip' % (
+    #         platform, start_timestamp, end_timestamp),
     #     index=False,
     #     compression='zip')
 
     print('the end')
-

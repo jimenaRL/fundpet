@@ -5,40 +5,52 @@ import pandas as pd
 from tqdm import tqdm
 from ural import get_domain_name
 from argparse import ArgumentParser
+from utils import get_date, get_path, get_folder
 
 ap = ArgumentParser()
-ap.add_argument('--platform', type=str)
 ap.add_argument('--config', type=str)
+ap.add_argument('--start', type=str, default=None)
+ap.add_argument('--end', type=str, default=None)
 args = ap.parse_args()
-platform = args.platform
 config = args.config
+start = args.start
+end = args.end
 
+# 0. Set things
+########################################################
+
+# load config and set parameters
 with open(config, "r") as fh:
     config = yaml.load(fh, Loader=yaml.SafeLoader)
-
-externalUrl = 'externalUrl' if platform=='twitter' else 'url.normalized'
-
-FILENAME = f"full_{platform}__start_{config['start']}_end_{config['end']}.csv"
-DUMPPATH = os.path.join(config['dump_folder'], FILENAME)
-print(f"Analyzing full {platform} dump from Linkfluence from {DUMPPATH}.")
-OUTFOLDER = os.path.join(config['export_folder'])
-OUTPATH = os.path.join(OUTFOLDER, f"toFetchUrls_full_{platform}.csv")
 
 DOMAINNAMETHRESHOLD = config['domain_freq_threshold']
 DOMAINSTORESOLVE = config['domains_to_preresolve']
 IGNOREDOMAINS = config['ignored_domains']
 
+# set dates and get paths
+start_timestamp, end_timestamp = get_date(start, end)
+dump_path = get_path(start_timestamp, end_timestamp, 'dumps')
+print(f"Analyzing Linkfluence dump from {dump_path}.")
+
+preprocessed_path = get_path(start_timestamp, end_timestamp, 'preprocessed')
+
+PREPROCESSEDFOLDER = get_folder('preprocessed')
+
+# 1. Load dump
+########################################################
+
 # (0) Load linkfluence dump and standarize url column name
-df = pd.read_csv(DUMPPATH, dtype=str) \
-    .rename(columns={externalUrl: 'externalUrl'})
+df = pd.read_csv(dump_path, dtype=str)
 n0 = len(df)
 df = df[~ df['externalUrl'].isna()]
 df = df[~ (df['externalUrl'] == "[]")]
 n1 = len(df)
 print(f"Drop {n0 - n1} empty entry of {n0} in URL column, left {n1}.")
 
+# 1. Process dump
+########################################################
 
-# (1) Drop repeated URLs
+# (1a) Drop repeated URLs
 externalUrl_counts = df['externalUrl'].value_counts()
 externalUrl_counts = externalUrl_counts \
     .to_frame() \
@@ -53,12 +65,31 @@ df = df.groupby('externalUrl').first().reset_index()
 # print(externalUrl_counts.head(20))
 
 
-# (1) Get domain names from URLs and compute stats
+# (1b) Get domain names from URLs
 df = df.assign(domainName=df['externalUrl'].apply(get_domain_name))
 
 
-# (2) Try to resolve shortened URLs and update domain names
-print('Resolving shortened URLs.')
+# (1c) Group URLs for specific domains
+def resolveAvaazUrls(df):
+    domain = 'avaaz.org'
+    df = df.sort_values(by='domainName').reset_index().drop(columns=['index'])
+    a0 = df[df.domainName == domain].index[0]
+    a1 = df[df.domainName == domain].index[-1]
+    urls = df[df.domainName == domain]['externalUrl'].tolist()
+    print(f"Resolving {len(urls)} urls for domain '{domain}'.")
+    resolved_urls = []
+    for url in tqdm(urls):
+        resolved_urls.append(minet.web.resolve(url=url)[1][-1].url)
+    df['externalUrl'].loc[i0:i1] = resolved_urls
+    resDomainNames = [get_domain_name(ru) for ru in resolved_urls]
+    df['domainName'].loc[i0:i1] = resDomainNames
+    return df
+
+# (1d) Try to resolve shortened URLs and update domain names
+
+
+print('Resolving shortened URLs...')
+
 
 def resolveUrls(df, domain):
     df = df.sort_values(by='domainName').reset_index().drop(columns=['index'])
@@ -74,17 +105,18 @@ def resolveUrls(df, domain):
     df['domainName'].loc[i0:i1] = resDomainNames
     return df
 
+
 for domain in DOMAINSTORESOLVE:
     df = resolveUrls(df, domain=domain)
 
-# (3) Remove URLs from domains to ignore
+# (1e) Remove URLs from domains to ignore
 for domain in IGNOREDOMAINS:
     n = len(df[df.domainName == domain])
     print(f"Removing {n} URLs whose domain name is {domain}")
     df = df[df.domainName != domain]
 
 
-# (4) Domains stats
+# (1f) Domains stats
 domainName_counts = df['domainName'].value_counts()
 domainName_counts = domainName_counts \
     .to_frame() \
@@ -104,37 +136,42 @@ print(mssg)
 # print("Most frequents domain names counts:")
 # print(domainName_counts.head(20))
 
+
+# 3. Export processed data and stats
+########################################################
+
 # (4) Export full preprocessed file
 toKeep = ['uid', 'permalink', 'domainName', 'externalUrl', 'urlCount']
 df = df[toKeep].sort_values(by=['urlCount', 'domainName'], ascending=False)
-df.to_csv(OUTPATH, index=False)
-print(f"File save to {OUTPATH}")
+outpath = os.path.join(PREPROCESSEDFOLDER, f"toFetchUrls_full.csv")
+df.to_csv(outpath, index=False)
+print(f"File save to {outpath}")
 
 domainName_outpath = os.path.join(
-    OUTFOLDER,
-    f"postprecessed_domain_counts_{platform}.csv")
+    PREPROCESSEDFOLDER,
+    f"postprecessed_domain_counts.csv")
 domainName_counts.to_csv(domainName_outpath, index=False)
 print(f"Domain counts saved at {domainName_outpath}.")
 
 externalUrl_outpath = os.path.join(
-    OUTFOLDER,
-    f"original_urls_counts_{platform}.csv")
+    PREPROCESSEDFOLDER,
+    f"original_urls_counts_.csv")
 externalUrl_counts = externalUrl_counts.merge(
     df[['externalUrl', 'urlCount', 'domainName']],
     on=['externalUrl', 'urlCount'])
-externalUrl_counts[['externalUrl', 'domainName','urlCount']] \
+externalUrl_counts[['externalUrl', 'domainName', 'urlCount']] \
     .to_csv(externalUrl_outpath, index=False)
 print(f"Domain counts saved at {externalUrl_outpath}.")
 
 
-# (5) Export preprocessed files by domain for most frquent domains
+# (5) Export preprocessed files by domain for most frequent domains
 print(f"Exporting data for domains with at least {DOMAINNAMETHRESHOLD} URLs.")
 is_most_freq_domain = domainName_counts.domainCounts > DOMAINNAMETHRESHOLD
 for t in domainName_counts[is_most_freq_domain].itertuples():
-    domain_folder_path = os.path.join(OUTFOLDER, f"{t.domain}")
+    domain_folder_path = os.path.join(PREPROCESSEDFOLDER, f"{t.domain}")
     os.makedirs(domain_folder_path, exist_ok=True)
     outpath = os.path.join(
         domain_folder_path,
-        f"toFetchUrl_{platform}__{t.domain}.csv")
+        f"toFetchUrl__{t.domain}.csv")
     df[df.domainName == t.domain].to_csv(outpath, index=False)
     print(f"Save {t.domainCounts} URLs to fecth at {outpath}.")
