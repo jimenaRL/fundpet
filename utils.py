@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta, MO
 
@@ -22,8 +23,13 @@ def get_folder(folder):
     return os.path.join(os.environ['LFFOLDER'], folder)
 
 
-def get_path(start, end, folder):
-    filename = '%s__start_%s_end_%s.csv' % (folder, start, end)
+def get_dbpath():
+    return os.path.join(os.environ['LFFOLDER'], 'fundpet.db')
+
+
+def get_path(platform, query, start, end, folder):
+    filename = '%s_%s_%s_start_%s_end_%s.csv' % (
+        folder, platform, query, start, end)
     outpath = os.path.join(get_folder(folder), filename)
     return outpath
 
@@ -43,3 +49,37 @@ def get_date(start, end):
         start_timestamp = start
 
     return start_timestamp, end_timestamp
+
+
+def populateSqlite(db_path, name, df, toKeep, dtype='TEXT'):
+
+    if not os.path.exists(db_path):
+        print(f"Creating new sqlite database at {db_path}.")
+
+    records = df[toKeep].to_dict(orient='records')
+
+    # check if the table doesn't exists
+    with sqlite3.connect(db_path) as con:
+        cur = con.cursor()
+        query = """
+            SELECT count(name)
+            FROM sqlite_master
+            WHERE type='table'
+            AND name=? """
+        cur.execute(query, (name, ))
+        con.commit()
+        res = cur.fetchall()
+    table_exists = False if res[0][0] == 0 else True
+
+    ncols = len(toKeep)
+    qvals = ''.join('?,' * ncols)[:-1]
+    schema = ' '.join([f"{k} TEXT," for k in toKeep])[:-1]
+    data = df[toKeep].values.tolist()
+
+    with sqlite3.connect(db_path) as con:
+        cur = con.cursor()
+        if not table_exists:
+            cur.execute(f'''CREATE TABLE {name}({schema})''')
+            print(f"SQLITE: table {name} created.")
+        cur.executemany(f"INSERT INTO {name} VALUES({qvals})", data)
+        print(f"SQLITE: table {name} populated.")

@@ -8,10 +8,10 @@ source conf.sh
 pyenv local linkfluence
 
 # 1. dump download
-# python get_dump.py --client_id=$client_id --client_secret=$client_secret
+python get_dump.py --config=config.yaml --client_id=$client_id --client_secret=$client_secret
 
 # 2. preprocess dump
-python preprocessing.py --config=preprocessing_config.yaml
+python preprocessing.py --config=config.yaml
 
 # # fetch websites
 # minet fetch externalUrl /home/jimena/work/data/fundpet/scrapping/${domain}/toFetchUrl_${platform}__${domain}.csv \
