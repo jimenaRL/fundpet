@@ -13,6 +13,10 @@ python get_dump.py --config=config.yaml --client_id=$client_id --client_secret=$
 # 2. preprocess dump
 python preprocessing.py --config=config.yaml
 
+# 3. compute stats
+python stats.py --config=config.yaml
+
+
 # # fetch websites
 # minet fetch externalUrl /home/jimena/work/data/fundpet/scrapping/${domain}/toFetchUrl_${platform}__${domain}.csv \
 # --output /home/jimena/work/data/fundpet/scrapping/${domain}/fetchedUrl_${platform}__${domain}.csv \

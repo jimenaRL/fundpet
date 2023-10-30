@@ -37,12 +37,10 @@ start_timestamp, end_timestamp = get_date(start, end)
 
 # These are defined in the Linkfluence dashboard
 queries = config['linkfluence_queries']
+PLATFORMS = config['platforms']
 
 # 1. Major parameters
 ########################################################
-
-# queries only include Twitter, don't change
-PLATFORMS = ["twitter", "facebook"]
 
 # 10.000 is the max allowed by the API. Do not change this !!!!
 query_size_limit = 10000

@@ -1,11 +1,14 @@
+platforms:
+  - twitter
+  - facebook
 linkfluence_queries:
-  SoMe4DemDutch: 398400
+  # SoMe4DemDutch: 398400
   SoMe4DemFrench: 398394
-  SoMe4DemGerman: 398397
-  SoMe4DemItalian: 398396
-  SoMe4DemPolish: 398398
-  SoMe4DemRomanian: 398399
-  SoMe4DemSpanish: 398395
+  # SoMe4DemGerman: 398397
+  # SoMe4DemItalian: 398396
+  # SoMe4DemPolish: 398398
+  # SoMe4DemSpanish: 398395
+  # SoMe4DemRomanian: 398399
 ignored_domains:
   - twitter.com
   - youtube.com
@@ -21,5 +24,5 @@ domains_to_preresolve:
   - chng.it
 domains_to_pretreat:
   - avaaz.org
-domain_freq_threshold: 100
+domain_freq_threshold: 10
 
