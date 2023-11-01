@@ -7,8 +7,11 @@ linkfluence_queries:
   # SoMe4DemGerman: 398397
   # SoMe4DemItalian: 398396
   # SoMe4DemPolish: 398398
-  # SoMe4DemSpanish: 398395
+  SoMe4DemSpanish: 398395
   # SoMe4DemRomanian: 398399
+ignored_urls_same_as_domain:
+  - change.org
+  - mesopinions.com/fr
 ignored_domains:
   - twitter.com
   - youtube.com

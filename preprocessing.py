@@ -1,9 +1,11 @@
 import os
+import re
 import yaml
 import minet
+import tempfile
 import pandas as pd
 from tqdm import tqdm
-from ural import get_domain_name
+from ural import get_domain_name, urls_from_text, is_typo_url
 from argparse import ArgumentParser
 from utils import get_date, get_path, get_dbpath, get_folder, populateSqlite
 
@@ -16,6 +18,11 @@ config = args.config
 start = args.start
 end = args.end
 
+# debug
+config = 'config.yaml'
+start = None
+end = None
+
 # 0. Set things
 ########################################################
 
@@ -26,6 +33,7 @@ with open(config, "r") as fh:
 DOMAINNAMETHRESHOLD = config['domain_freq_threshold']
 DOMAINSTORESOLVE = config['domains_to_preresolve']
 IGNOREDOMAINS = config['ignored_domains']
+IGNOREURLSSAMEASDOM = config['ignored_urls_same_as_domain']
 
 PLATFORMS = config['platforms']
 QUERIES = config['linkfluence_queries']
@@ -37,83 +45,89 @@ start_timestamp, end_timestamp = get_date(start, end)
 
 PREPROCESSEDFOLDER = get_folder('preprocessed')
 
-for platform in PLATFORMS:
-    for query in QUERIES:
+for query in QUERIES:
 
-        # 1. Load dump
-        ########################################################
+    df = []
+    columns = ['permalink', 'uid', 'text', 'externalUrl', 'platform', 'query']
 
+    # 1. Load dumps
+    ########################################################
+    for platform in PLATFORMS:
+
+        # (0) Load linkfluence dump and standarize url column name
         dump_path = get_path(
             platform, query, start_timestamp, end_timestamp, 'dumps')
         if os.path.exists(dump_path):
             print(f"Analyzing Linkfluence dump from {dump_path}.")
+            df.append(pd.read_csv(dump_path, dtype=str)[columns])
         else:
-            print(f"Skipping {query} from platform {platform}. Unnable to find dumps at{dump_path}.")
+            print(f"Skipping {query} from platform {platform}. \
+            Unnable to find dumps at{dump_path}.")
             continue
+    df = pd.concat(df)
 
-        # (0) Load linkfluence dump and standarize url column name
-        df = pd.read_csv(dump_path, dtype=str)
-        n0 = len(df)
-        df = df[~ df['externalUrl'].isna()]
-        df = df[~ (df['externalUrl'] == "[]")]
-        n1 = len(df)
-        print(f"Drop {n0 - n1} empty entry of {n0} in URL column, left {n1}.")
+    # 1. Process dump
+    ########################################################
 
-        # 1. Process dump
-        ########################################################
+    # (1a) Get URLs posts text
+    urlsFromText = df['text'] \
+        .fillna("") \
+        .apply(lambda t: list(urls_from_text(t)))
+    df = df.assign(urlsFromText=urlsFromText)
+    df = df.explode('urlsFromText') \
+        .reset_index()\
+        .drop(columns='index') \
+        .rename(columns={'urlsFromText': 'urlFromText'})
+    df = df[~df.urlFromText.isna()]
+    n0 = len(df)
+    df = df.assign(isTypoUrl=df['urlFromText'].apply(is_typo_url))
+    df = df[~df.isTypoUrl].drop(columns='isTypoUrl')
+    print(f"Removing {n0 - len(df)} with typo urls, left {len(df)}.")
 
-        # (1a) Get domain names from URLs
-        df = df.assign(domainName=df['externalUrl'].apply(get_domain_name))
+    # (1b) Resolve urls
+    print('Resolving URLs...')
+    with tempfile.NamedTemporaryFile() as tmp1:
+        df.to_csv(tmp1.name, index=False)
+        with tempfile.NamedTemporaryFile() as tmp2:
+            os.system(f"minet resolve urlFromText {tmp1.name} > {tmp2.name}")
+            df = pd.read_csv(tmp2.name, dtype=str) \
+                .rename(columns={'resolved': 'resolvedUrl'})
 
-        # (1b) Group URLs for specific domains
-        def resolveAvaazUrls(df):
-            domain = 'avaaz.org'
-            df = df.sort_values(by='domainName').reset_index().drop(columns=['index'])
-            a0 = df[df.domainName == domain].index[0]
-            a1 = df[df.domainName == domain].index[-1]
-            urls = df[df.domainName == domain]['externalUrl'].tolist()
-            print(f"Resolving {len(urls)} urls for domain '{domain}'.")
-            resolved_urls = []
-            for url in tqdm(urls):
-                resolved_urls.append(minet.web.resolve(url=url)[1][-1].url)
-            df['externalUrl'].loc[i0:i1] = resolved_urls
-            resDomainNames = [get_domain_name(ru) for ru in resolved_urls]
-            df['domainName'].loc[i0:i1] = resDomainNames
-            return df
+    # (1c) Get domain names from URLs
+    df = df.assign(
+        domainName=df['resolvedUrl'].fillna("").apply(get_domain_name))
 
-        print('Resolving shortened URLs...')
+    # (1c) Remove URLs from domains to ignore
+    for domain in IGNOREDOMAINS:
+        n = len(df[df.domainName == domain])
+        if n > 0:
+            print(f"Removing {n} URLs whose domain name is {domain}")
+            df = df[df.domainName != domain]
 
-        def resolveUrls(df, domain):
-            if len(df[df.domainName == domain]) > 0:
-                df = df.sort_values(by='domainName') \
-                    .reset_index() \
-                    .drop(columns=['index'])
-                i0 = df[df.domainName == domain].index[0]
-                i1 = df[df.domainName == domain].index[-1]
-                urls = df[df.domainName == domain]['externalUrl'].tolist()
-                print(f"Resolving {len(urls)} urls for domain '{domain}'.")
-                resolved_urls = []
-                for url in tqdm(urls):
-                    resolved_urls.append(minet.web.resolve(url=url)[1][-1].url)
-                df['externalUrl'].loc[i0:i1] = resolved_urls
-                resDomainNames = [get_domain_name(ru) for ru in resolved_urls]
-                df['domainName'].loc[i0:i1] = resDomainNames
-            return df
+    print(f"Left {len(df)} entries.")
 
-        for domain in DOMAINSTORESOLVE:
-            df = resolveUrls(df, domain=domain)
+    # (1d) Drop urls equals to their domain
+    def fn(s):
+        s = s.replace('https://', '').replace('http://', '')
+        s = s.replace('www.', '')
+        s = re.sub(r"/$", "", s)
+        return s
 
-        # (1c) Remove URLs from domains to ignore
-        for domain in IGNOREDOMAINS:
-            n = len(df[df.domainName == domain])
-            if n > 0:
-                print(f"Removing {n} URLs whose domain name is {domain}")
-                df = df[df.domainName != domain]
+    urlSameAsDom = (df['resolvedUrl'].fillna("").apply(fn) == df['domainName'])
+    df = df.assign(urlSameAsDomain=urlSameAsDom)
 
-        # 2. Export processed data to sql table
-        ########################################################
+    for domain in IGNOREURLSSAMEASDOM:
+        n = len(df)
+        df = df[~((df.domainName == domain) & df.urlSameAsDomain)]
+        print(f"Removing {n - len(df)} with url equal to its domain {domain}.")
 
-        table = f'{platform}_{query}'
-        columns = ['permalink', 'domainName', 'externalUrl']
-        records = df[columns].values.tolist()
-        populateSqlite(DBPATH, table, records, columns)
+    # 2. Export processed data to sql table
+    ########################################################
+
+    table = f'{query}'
+    columns = [
+        'permalink', 'uid', 'text', 'resolvedUrl',
+        'platform', 'query', 'domainName',
+        ]
+    records = df[columns].values.tolist()
+    populateSqlite(DBPATH, table, records, columns)

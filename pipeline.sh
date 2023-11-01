@@ -4,16 +4,15 @@ client_id=$1
 client_secret=$2
 
 # 0. set environement
-source conf.sh
 pyenv local linkfluence
 
 # 1. dump download
-python get_dump.py --config=config.yaml --client_id=$client_id --client_secret=$client_secret
+# python get_dump.py --config=config.yaml --client_id=$client_id --client_secret=$client_secret
 
 # 2. preprocess dump
-python preprocessing.py --config=config.yaml
+# python preprocessing.py --config=config.yaml
 
-# 3. compute stats
+# # 3. compute stats
 python stats.py --config=config.yaml
 
 
