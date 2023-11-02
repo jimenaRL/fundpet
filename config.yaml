@@ -3,7 +3,7 @@ platforms:
   - facebook
 linkfluence_queries:
   # SoMe4DemDutch: 398400
-  SoMe4DemFrench: 398394
+  # SoMe4DemFrench: 398394
   # SoMe4DemGerman: 398397
   # SoMe4DemItalian: 398396
   # SoMe4DemPolish: 398398
@@ -25,7 +25,22 @@ ignored_domains:
 domains_to_preresolve:
   - bit.ly
   - chng.it
-domains_to_pretreat:
-  - avaaz.org
-domain_freq_threshold: 10
+domains_to_fetch:
+  SoMe4DemDutch:
+  SoMe4DemFrench:
+  SoMe4DemGerman:
+  SoMe4DemItalian:
+  SoMe4DemPolish:
+  SoMe4DemSpanish:
+    - change.org
+    - avaaz.org
+  SoMe4DemRomanian:
+domain_freq_threshold:
+  SoMe4DemDutch:
+  SoMe4DemFrench:
+  SoMe4DemGerman:
+  SoMe4DemItalian:
+  SoMe4DemPolish:
+  SoMe4DemSpanish: 50
+  SoMe4DemRomanian:
 

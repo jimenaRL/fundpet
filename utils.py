@@ -35,6 +35,12 @@ def get_path(platform, query, start, end, folder):
     return outpath
 
 
+def get_file_fetch_path(query, folder):
+    filename = 'to_fetch_%s_%s.csv' % (folder, query)
+    outpath = os.path.join(get_folder(folder), filename)
+    return outpath
+
+
 def get_date(start, end):
     """
     If no start or end date, download last week from last monday
@@ -58,7 +64,7 @@ def get_date(start, end):
     return start_timestamp, end_timestamp
 
 
-def populateSqlite(db_path, table, records, columns, dtype='TEXT'):
+def populateSqlite(db_path, table, records, columns, dtypes=None):
 
     if not os.path.exists(db_path):
         print(f"Creating new sqlite database at {db_path}.")
@@ -79,7 +85,10 @@ def populateSqlite(db_path, table, records, columns, dtype='TEXT'):
 
     ncols = len(columns)
     qvals = ''.join('?,' * ncols)[:-1]
-    schema = ' '.join([f"{k} TEXT, " for k in columns])
+    if not dtypes:
+        schema = ' '.join([f"{k} TEXT, " for k in columns])
+    else:
+        schema = ' '.join([f"{k} {d}, " for k, d in zip(columns, dtypes)])
     uniques = ' '.join([f" {k}," for k in columns])[:-1]
     schema += f'UNIQUE({uniques})'
 
@@ -94,7 +103,7 @@ def populateSqlite(db_path, table, records, columns, dtype='TEXT'):
         print(f"SQLITE: table {table} populated.")
 
 
-def retrieve_table(db_path, table, verbose=False):
+def retrieve_table(db_path, table, verbose=True):
 
     query = f"SELECT * FROM {table}"
 
@@ -111,6 +120,32 @@ def retrieve_table(db_path, table, verbose=False):
         columns = list(map(lambda x: x[0], cur.description))
         res = cur.fetchall()
 
+    df = pd.DataFrame(res, columns=columns)
+
+    return df
+
+
+def retrieve_urls_from_domain(db_path, query, domains, verbose=True):
+
+    table = query
+    doms = ','.join([f"'{d}'" for d in domains])
+    query = f"""
+        SELECT uid,resolvedUrl,domainName FROM {table}
+        where domainName IN ({doms})"""
+
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(
+            f"Unnable to find database at: '{db_path}'.")
+
+    if verbose:
+        print(f"Quering sqlite database at {db_path} with `{query[:100]}`... ")
+
+    with sqlite3.connect(db_path) as con:
+        cur = con.cursor()
+        cur.execute(query)
+        res = cur.fetchall()
+
+    columns = ['uid', 'resolvedUrl', 'domainName']
     df = pd.DataFrame(res, columns=columns, dtype=str)
 
     return df

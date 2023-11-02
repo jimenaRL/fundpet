@@ -72,22 +72,14 @@ for query in QUERIES:
     print("Most frequents domain names counts:")
     print(domainName_counts.head(5))
 
-    # urlNoProt = df['resolvedUrl'].apply(
-    #     lambda url: url.replace('https://', '').replace('http://', ''))
-    # tmp = df.assign(urlNoProt=urlNoProt)
-    # c0 = (tmp.urlNoProt == tmp.domainName).sum()
-    # mssg = f"There are at least {c0} unique urls that are equal to their \
-    # correspondent domain name."
-    # print(mssg)
-
     # 2. Make exports
     ########################################################
     table = f'{query}_resolvedUrlCounts'
     columns = ["resolvedUrl", "urlCount"]
     records = resolvedUrl_counts[columns].values.tolist()
-    populateSqlite(DBPATH, table, records, columns)
+    populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
 
     table = f'{query}_domainCounts'
     columns = ["domain", "domainCounts"]
     records = domainName_counts[columns].values.tolist()
-    populateSqlite(DBPATH, table, records, columns)
+    populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
