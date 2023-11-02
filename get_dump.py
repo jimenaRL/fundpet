@@ -107,7 +107,7 @@ for platform in PLATFORMS:
             payload = {
               "from": cell_start_timestamp,
               "to": end_timestamp,
-              "PLATFORMS": [platform],
+              "platforms": [platform],
               "focuses": [{"id": query_id, "include": True}],
               "limit": query_size_limit,
               "sortOrder": "asc",
@@ -123,7 +123,6 @@ for platform in PLATFORMS:
                 df = pd.json_normalize(data['hits'])
                 df['query'] = query_name
                 df['platform'] = platform
-                df['language'] = query_name.replace('SoMe4Dem', '')
                 # normalize url column name
                 if platform == 'facebook':
                     df['externalUrl'] = df['url.normalized']
