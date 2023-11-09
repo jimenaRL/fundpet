@@ -2,13 +2,14 @@ platforms:
   - twitter
   - facebook
 linkfluence_queries:
-  # SoMe4DemDutch: 398400
-  # SoMe4DemFrench: 398394
-  # SoMe4DemGerman: 398397
-  # SoMe4DemItalian: 398396
-  # SoMe4DemPolish: 398398
+  SoMe4DemDutch: 398400
+  SoMe4DemFrench: 398394
+  SoMe4DemGerman: 398397
+  SoMe4DemItalian: 398396
+  SoMe4DemPolish: 398398
   SoMe4DemSpanish: 398395
-  # SoMe4DemRomanian: 398399
+  # SoMe4DemRomanian: 398399 FAILS SOME WEEKS...
+nb_threads_fetch: 50
 ignored_urls_same_as_domain:
   - change.org
   - mesopinions.com/fr
@@ -27,20 +28,26 @@ domains_to_preresolve:
   - chng.it
 domains_to_fetch:
   SoMe4DemDutch:
+    - petities.nl
   SoMe4DemFrench:
+    - gofundme.com
   SoMe4DemGerman:
+    - change.org
   SoMe4DemItalian:
+    - innn.it
   SoMe4DemPolish:
+    - pomagam.pl
   SoMe4DemSpanish:
     - change.org
     - avaaz.org
   SoMe4DemRomanian:
+    - change.org
 domain_freq_threshold:
-  SoMe4DemDutch:
-  SoMe4DemFrench:
-  SoMe4DemGerman:
-  SoMe4DemItalian:
-  SoMe4DemPolish:
+  SoMe4DemDutch: 50
+  SoMe4DemFrench: 50
+  SoMe4DemGerman: 50
+  SoMe4DemItalian: 50
+  SoMe4DemPolish: 50
   SoMe4DemSpanish: 50
-  SoMe4DemRomanian:
+  SoMe4DemRomanian: 50
 

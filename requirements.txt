@@ -4,3 +4,4 @@ pandas
 minet==0.66.2
 trafilatura
 beautifulsoup4
+requests

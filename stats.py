@@ -32,6 +32,8 @@ DBPATH = get_dbpath()
 
 for query in QUERIES:
 
+    print('\nQuery: %s' % query)
+
     # 1. Retrive data from table
     ########################################################
 
@@ -48,11 +50,11 @@ for query in QUERIES:
     resolvedUrl_counts = resolvedUrl_counts \
         .to_frame() \
         .reset_index() \
-        .rename(
-            columns={"index": "resolvedUrl", "resolvedUrl": "urlCount"})
+        .rename(columns={"count": "urlCount"})
     u = len(resolvedUrl_counts)
     print(
         f"There are {u} unique urls of a total of {n} ({100*u/n:.2f}%)")
+
     df = df.merge(resolvedUrl_counts, on='resolvedUrl')
     df = df.groupby('resolvedUrl').first().reset_index() \
         .sort_values(by='urlCount', ascending=False)
@@ -65,7 +67,7 @@ for query in QUERIES:
     domainName_counts = domainName_counts \
         .to_frame() \
         .reset_index() \
-        .rename(columns={"index": "domain", "domainName": "domainCounts"})
+        .rename(columns={"count": "domainCounts"})
     d1 = len(domainName_counts)
 
     print(f"There are {d1} unique domains.")
@@ -80,6 +82,6 @@ for query in QUERIES:
     populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
 
     table = f'{query}_domainCounts'
-    columns = ["domain", "domainCounts"]
+    columns = ["domainName", "domainCounts"]
     records = domainName_counts[columns].values.tolist()
     populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])

@@ -20,8 +20,9 @@ def get_folder(folder):
     if folder not in VALIDFOLDERS:
         raise ValueError(
             f'Wrong folder kind `{kind}` must be one of {VALIDFOLDERS}.')
-
-    return os.path.join(os.environ['LFFOLDER'], folder)
+    folder_path = os.path.join(os.environ['LFFOLDER'], folder)
+    os.makedirs(folder_path, exist_ok=True)
+    return folder_path
 
 
 def get_dbpath():
@@ -35,10 +36,12 @@ def get_path(platform, query, start, end, folder):
     return outpath
 
 
-def get_file_fetch_path(query, folder):
-    filename = 'to_fetch_%s_%s.csv' % (folder, query)
-    outpath = os.path.join(get_folder(folder), filename)
-    return outpath
+def get_fetch_paths(query):
+    output_dir = os.path.join(get_folder('fetched'), query)
+    os.makedirs(output_dir, exist_ok=True)
+    urls_to_fetch_file = os.path.join(output_dir, 'to_fetch_%s.csv' % (query))
+    output = os.path.join(output_dir, 'minet_output_%s.csv' % (query))
+    return urls_to_fetch_file, output, output_dir
 
 
 def get_date(start, end):
@@ -64,10 +67,12 @@ def get_date(start, end):
     return start_timestamp, end_timestamp
 
 
-def populateSqlite(db_path, table, records, columns, dtypes=None):
+
+def tableExists(db_path, table):
 
     if not os.path.exists(db_path):
-        print(f"Creating new sqlite database at {db_path}.")
+        return False
+
 
     # check if the table doesn't exists
     with sqlite3.connect(db_path) as con:
@@ -82,6 +87,15 @@ def populateSqlite(db_path, table, records, columns, dtypes=None):
         res = cur.fetchall()
 
     table_exists = False if res[0][0] == 0 else True
+
+    return table_exists
+
+def populateSqlite(db_path, table, records, columns, dtypes=None):
+
+    if not os.path.exists(db_path):
+        print(f"Creating new sqlite database at {db_path}.")
+
+    table_exists = tableExists(db_path, table)
 
     ncols = len(columns)
     qvals = ''.join('?,' * ncols)[:-1]
@@ -129,9 +143,12 @@ def retrieve_urls_from_domain(db_path, query, domains, verbose=True):
 
     table = query
     doms = ','.join([f"'{d}'" for d in domains])
+    columns = ['uid', 'resolvedUrl', 'domainName']
+    columns_str = ','.join(columns)
     query = f"""
-        SELECT uid,resolvedUrl,domainName FROM {table}
-        where domainName IN ({doms})"""
+        SELECT uid, resolvedUrl, domainName FROM {table}
+        where domainName IN ({doms})
+        AND fetched=='0'"""
 
     if not os.path.exists(db_path):
         raise FileNotFoundError(
@@ -145,7 +162,53 @@ def retrieve_urls_from_domain(db_path, query, domains, verbose=True):
         cur.execute(query)
         res = cur.fetchall()
 
-    columns = ['uid', 'resolvedUrl', 'domainName']
     df = pd.DataFrame(res, columns=columns, dtype=str)
 
     return df
+
+
+def update_fetched(db_path, df, query, verbose=True):
+
+    table = query
+
+    fetched_uids = df[df.http_status == 200].uid.tolist()
+
+    query = f"""
+        UPDATE {table}
+        SET fetched = '1'
+        WHERE uid in ({', '.join('?' for _ in fetched_uids)})
+    """
+
+    if verbose:
+        print(f"Quering sqlite database at {db_path} with `{query[:100]}`... ")
+
+    with sqlite3.connect(db_path) as con:
+        cur = con.cursor()
+        cur.execute(query, fetched_uids)
+        res = cur.fetchall()
+
+def update_preprocessed(db_path, query, df, columns):
+
+    table = query
+
+    if tableExists(db_path, table):
+        # get already fetch urls
+        query = f"""
+            SELECT uid from {table} WHERE fetched='1'
+        """
+        with sqlite3.connect(db_path) as con:
+            cur = con.cursor()
+            cur.execute(query)
+            res = cur.fetchall()
+        df_fetched = pd.DataFrame(res, columns=['uid'], dtype=str)
+
+        # remove already fetched urls
+        df = df[~df['uid'].isin(df_fetched.uid.tolist())]
+
+    records = df[columns].values.tolist()
+
+    columns = [
+        'permalink', 'uid', 'text', 'resolvedUrl',
+        'platform', 'query', 'domainName', 'date', 'fetched'
+        ]
+    populateSqlite(db_path, table, records, columns)

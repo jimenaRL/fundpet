@@ -2,4 +2,3 @@
 .python-version
 domains
 *__pycache__
-dont_commit.py

@@ -28,7 +28,6 @@ end = args.end
 
 # 0. Set things
 ########################################################
-
 # load config and set parameters
 with open(config, "r") as fh:
     config = yaml.load(fh, Loader=yaml.SafeLoader)
