@@ -1,18 +1,7 @@
 platforms:
   - twitter
   - facebook
-linkfluence_queries:
-  SoMe4DemDutch: 398400
-  SoMe4DemFrench: 398394
-  SoMe4DemGerman: 398397
-  SoMe4DemItalian: 398396
-  SoMe4DemPolish: 398398
-  SoMe4DemSpanish: 398395
-  # SoMe4DemRomanian: 398399 FAILS SOME WEEKS...
 nb_threads_fetch: 50
-ignored_urls_same_as_domain:
-  - change.org
-  - mesopinions.com/fr
 ignored_domains:
   - twitter.com
   - youtube.com
@@ -23,31 +12,46 @@ ignored_domains:
   - fb.me
   - paypal.me
   - paypal.com
+ignored_urls_same_as_domain:
+  - change.org
+  - mesopinions.com/fr
 domains_to_preresolve:
   - bit.ly
   - chng.it
-domains_to_fetch:
+queries:
   SoMe4DemDutch:
-    - petities.nl
+    id: 398400
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - petities.nl
   SoMe4DemFrench:
-    - gofundme.com
+    id: 398394
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - gofundme.com
   SoMe4DemGerman:
-    - change.org
+    id: 398397
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - change.org
   SoMe4DemItalian:
-    - innn.it
+    id: 398396
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - change.org
   SoMe4DemPolish:
-    - pomagam.pl
+    id: 398398
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - pomagam.pl
   SoMe4DemSpanish:
-    - change.org
-    - avaaz.org
+    id: 398395
+    domain_freq_threshold: 5
+    domains_to_fetch:
+      - change.org
+      - avaaz.org
   SoMe4DemRomanian:
-    - change.org
-domain_freq_threshold:
-  SoMe4DemDutch: 50
-  SoMe4DemFrench: 50
-  SoMe4DemGerman: 50
-  SoMe4DemItalian: 50
-  SoMe4DemPolish: 50
-  SoMe4DemSpanish: 50
-  SoMe4DemRomanian: 50
-
+    id: 398399 #  FAILS SOME WEEKS...
+    domain_freq_threshold: 5
+    domains_to_fetch:
+        - change.org

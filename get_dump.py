@@ -15,16 +15,20 @@ from utils import get_date, get_path
 # parse arguments
 ap = ArgumentParser()
 ap.add_argument('--config', type=str)
+ap.add_argument('--query', type=str)
 ap.add_argument('--client_id', type=str)
 ap.add_argument('--client_secret', type=str)
 ap.add_argument('--start', type=str, default=None)
 ap.add_argument('--end', type=str, default=None)
 args = ap.parse_args()
 config = args.config
+query = args.query
 client_id = args.client_id
 client_secret = args.client_secret
 start = args.start
 end = args.end
+
+print(f'\n~~~~~~~~~~~~~~ {query} ~~~~~~~~~~~~~~')
 
 # 0. Set things
 ########################################################
@@ -34,9 +38,10 @@ with open(config, "r") as fh:
 
 start_timestamp, end_timestamp = get_date(start, end)
 
-# These are defined in the Linkfluence dashboard
-queries = config['linkfluence_queries']
 PLATFORMS = config['platforms']
+
+QUERYID  = config['queries'][query]['id']
+
 
 # 1. Major parameters
 ########################################################
@@ -78,14 +83,8 @@ headers = {
 # This is the id of the radarly project dataset,remains unchanged
 PID = 5760
 
-# 3. Assembling a query
-########################################################
 
-query_list = []
-for query, query_id in queries.items():
-    query_list.append({"id": query_id, "include": True})
-
-# 4. Retrieving documents with the query
+# 3. Retrieving documents with the query
 ########################################################
 
 search_endpoint = api_url + "projects/" + str(PID) + "/inbox/search.json"
@@ -96,56 +95,53 @@ for platform in PLATFORMS:
 
     print('\n**Platform: %s' % platform)
 
-    for query_name, query_id in queries.items():
+    query_ended = False
+    cell_start_timestamp = start_timestamp
+    dfs = []
+    while not query_ended:
+        payload = {
+          "from": cell_start_timestamp,
+          "to": end_timestamp,
+          "platforms": [platform],
+          "focuses": [{"id": QUERYID, "include": True}],
+          "limit": query_size_limit,
+          "sortOrder": "asc",
+          "sortBy": "date",
+          "flag": {'rt': collect_retweets}
+          }
 
-        print('Query: %s' % query_name)
-        query_ended = False
-        cell_start_timestamp = start_timestamp
-        dfs = []
-        while not query_ended:
-            payload = {
-              "from": cell_start_timestamp,
-              "to": end_timestamp,
-              "platforms": [platform],
-              "focuses": [{"id": query_id, "include": True}],
-              "limit": query_size_limit,
-              "sortOrder": "asc",
-              "sortBy": "date",
-              "flag": {'rt': collect_retweets}
-              }
-
-            req = requests.post(search_endpoint, headers=headers, json=payload)
-            data = req.json()
-            if data['total'] == 0:
+        req = requests.post(search_endpoint, headers=headers, json=payload)
+        data = req.json()
+        if data['total'] == 0:
+            query_ended = True
+        else:
+            df = pd.json_normalize(data['hits'])
+            df['query'] = query
+            df['platform'] = platform
+            # normalize url column name
+            if platform == 'facebook':
+                df['externalUrl'] = df['url.normalized']
+            ts_col = df['date'].apply(pd.to_datetime)
+            df = df.rename(columns={'user.id': f'{platform}_id'})
+            dfs.append(df)
+            print('%s to %s' % (df['date'].min(), df['date'].max()))
+            if len(data['hits']) < query_size_limit or ts_col.max() > ts_end:
                 query_ended = True
             else:
-                df = pd.json_normalize(data['hits'])
-                df['query'] = query_name
-                df['platform'] = platform
-                # normalize url column name
-                if platform == 'facebook':
-                    df['externalUrl'] = df['url.normalized']
-                ts_col = df['date'].apply(pd.to_datetime)
-                df = df.rename(columns={'user.id': f'{platform}_id'})
-                dfs.append(df)
-                print('%s to %s' % (df['date'].min(), df['date'].max()))
-                if len(data['hits']) < query_size_limit or ts_col.max() > ts_end:
-                    query_ended = True
-                else:
-                    cell_start_timestamp = df.loc[ts_col.argmax(), 'date']
+                cell_start_timestamp = df.loc[ts_col.argmax(), 'date']
 
-        if len(dfs) == 0:
-            continue
+    if len(dfs) == 0:
+        continue
 
-        df = pd.concat(dfs, axis=0, ignore_index=True)
+    df = pd.concat(dfs, axis=0, ignore_index=True)
 
-        # emotions
-        emotions = list(set(list(chain(*df['emotion']))))
-        for emotion in emotions:
-            df[emotion] = df['emotion'].apply(
-                lambda x: True if emotion in x else False)
+    # emotions
+    emotions = list(set(list(chain(*df['emotion']))))
+    for emotion in emotions:
+        df[emotion] = df['emotion'].apply(
+            lambda x: True if emotion in x else False)
 
-        dump_path = get_path(
-            platform, query_name, start_timestamp, end_timestamp, 'dumps')
-        df.to_csv(dump_path, index=False)
-        print(f'Data saved at\n{dump_path}')
+    dump_path = get_path(
+        platform, query, start_timestamp, end_timestamp, 'dumps')
+    df.to_csv(dump_path, index=False)
+    print(f'Data saved at\n{dump_path}')
