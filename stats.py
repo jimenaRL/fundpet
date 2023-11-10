@@ -61,16 +61,16 @@ print(resolvedUrl_counts.head(10))
 
 # (2b) Domains stats
 print("~~~~~~~~~~~~~~~~~~~~~~~")
-domainName_counts = df['domainName'].value_counts()
-domainName_counts = domainName_counts \
+domain_counts = df['domain'].value_counts()
+domain_counts = domain_counts \
     .to_frame() \
     .reset_index() \
     .rename(columns={"count": "domainCounts"})
-d1 = len(domainName_counts)
+d1 = len(domain_counts)
 
 print(f"There are {d1} unique domains.")
 print("Most frequents domain names counts:")
-print(domainName_counts.head(5))
+print(domain_counts.head(5))
 
 # 2. Make exports
 ########################################################
@@ -80,6 +80,6 @@ records = resolvedUrl_counts[columns].values.tolist()
 populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
 
 table = f'{query}_domainCounts'
-columns = ["domainName", "domainCounts"]
-records = domainName_counts[columns].values.tolist()
+columns = ["domain", "domainCounts"]
+records = domain_counts[columns].values.tolist()
 populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])

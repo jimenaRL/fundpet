@@ -10,19 +10,19 @@ query=$5
 pyenv local fundpet
 
 # 1. dump download
-printf '\nFUNDPET 0: getting dumps\n'
+printf 'FUNDPET 0: getting dumps'
 python get_dump.py --query=$query --config=config.yaml --client_id=$client_id --client_secret=$client_secret --start=$start --end=$end
 
 ## 2. preprocess dump
-printf '\nFUNDPET 1: preprocessing dumps\n'
+printf 'FUNDPET 1: preprocessing dumps'
 python preprocessing.py --query=$query --config=config.yaml --start=$start --end=$end
 
 ## 3. compute stats
-printf '\nFUNDPET 2: computing stats\n'
+printf 'FUNDPET 2: computing stats'
 python stats.py --query=$query --config=config.yaml
 
 # # 4. prepare files and fetch websites
-printf '\nFUNDPET 3: fetching websites\n'
+printf 'FUNDPET 3: fetching websites'
 python fetch.py --query=$query --config=config.yaml
 
 # ## 5. scrap content from fetched websites

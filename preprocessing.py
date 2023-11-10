@@ -108,14 +108,14 @@ with tempfile.NamedTemporaryFile() as tmp1:
 # (1c) Get domain names from URLs
 print('Getting domain names')
 df = df.assign(
-    domainName=df['resolvedUrl'].fillna("").apply(get_domain_name))
+    domain=df['resolvedUrl'].fillna("").apply(get_domain_name))
 
 # (1c) Remove URLs from domains to ignore
 for domain in IGNOREDOMAINS:
-    n = len(df[df.domainName == domain])
+    n = len(df[df.domain == domain])
     if n > 0:
         print(f"Removing {n} URLs whose domain name is {domain}")
-        df = df[df.domainName != domain]
+        df = df[df.domain != domain]
 
 print(f"Left {len(df)} entries.")
 
@@ -126,12 +126,12 @@ def fn(s):
     s = re.sub(r"/$", "", s)
     return s
 
-urlSameAsDom = (df['resolvedUrl'].fillna("").apply(fn) == df['domainName'])
+urlSameAsDom = (df['resolvedUrl'].fillna("").apply(fn) == df['domain'])
 df = df.assign(urlSameAsDomain=urlSameAsDom)
 
 for domain in IGNOREURLSSAMEASDOM:
     n = len(df)
-    df = df[~((df.domainName == domain) & df.urlSameAsDomain)]
+    df = df[~((df.domain == domain) & df.urlSameAsDomain)]
     d = n - len(df)
     if d > 0:
         print(f"Drop {d} entries with url equal to its domain {domain}.")
@@ -144,11 +144,12 @@ for domain in IGNOREURLSSAMEASDOM:
 
 uid_suffix = df.groupby('uid', as_index=False)['uid'].cumcount().astype(str)
 df = df.assign(uid=df.uid+'_'+uid_suffix)
+df = df.assign(htmlPath='')
 
 df = df.assign(fetched=False)
 columns = [
     'permalink', 'uid', 'text', 'resolvedUrl',
-    'platform', 'query', 'domainName', 'date', 'fetched'
+    'platform', 'query', 'domain', 'date', 'fetched', 'htmlPath'
     ]
 
 update_preprocessed(DBPATH, query, df, columns)
