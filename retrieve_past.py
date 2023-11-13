@@ -13,7 +13,7 @@ nb_weeks = 27
 starts = [(first_monday + relativedelta(weekday=MO(i))).strftime("%Y-%m-%dT00:00:00-00:00") for i in range(1, nb_weeks+1)]
 ends = [(first_monday + relativedelta(weekday=MO(i+1))).strftime("%Y-%m-%dT00:00:00-00:00") for i in range(1, nb_weeks+1)]
 
-query = [
+QUERIES = [
     'SoMe4DemItalian',
     'SoMe4DemSpanish',
     "SoMe4DemDutch",
