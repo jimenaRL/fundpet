@@ -30,7 +30,6 @@ with open(config, "r") as fh:
     config = yaml.load(fh, Loader=yaml.SafeLoader)
 
 DOMAINNAMETHRESHOLD = config['queries'][query]['domain_freq_threshold']
-DOMAINSTORESOLVE = config['domains_to_preresolve']
 IGNOREDOMAINS = config['ignored_domains']
 IGNOREURLSSAMEASDOM = config['ignored_urls_same_as_domain']
 
