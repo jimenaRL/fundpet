@@ -3,55 +3,76 @@ platforms:
   - facebook
 nb_threads_fetch: 50
 ignored_domains:
+  - facebook.com
+  - fb.me
+  - google.com
+  - instagram.com
+  - paypal.me
+  - paypal.com
+  - soundcloud.com
+  - t.co
+  - t.me
   - twitter.com
   - youtube.com
   - youtu.be
-  - google.com
-  - instagram.com
-  - facebook.com
-  - fb.me
-  - paypal.me
-  - paypal.com
+  - weezevent.com
+ignored_urls:
+  - https://www.helloasso.com/page-introuvable
 ignored_urls_same_as_domain:
   - change.org
+  - doneeractie.nl
+  - geef.nl/nl
+  - innn.it
   - mesopinions.com/fr
-domains_to_preresolve:
-  - bit.ly
-  - chng.it
+  - petities.nl
+  - petitie24.nl
 queries:
   SoMe4DemDutch:
     id: 398400
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
+      - doneeractie.nl
       - petities.nl
+      - voordekunst.nl
+      - geef.nl
   SoMe4DemFrench:
     id: 398394
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
-      - gofundme.com
+      - helloasso.com
+      - mesopinions.com
+      - change.org
   SoMe4DemGerman:
     id: 398397
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
       - change.org
+      - innn.it
+      - betterplace.org
+      - bundestag.de
+      - betterplace.me
+      - spendenseite.de
   SoMe4DemItalian:
     id: 398396
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
       - change.org
   SoMe4DemPolish:
     id: 398398
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
+      - zrzutka.pl
       - pomagam.pl
+      - ratujemyzwierzaki.pl
+      - klubjagiellonski.pl
   SoMe4DemSpanish:
     id: 398395
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
-      - change.org
       - avaaz.org
+      - change.org
   SoMe4DemRomanian:
     id: 398399 #  FAILS SOME WEEKS...
-    domain_freq_threshold: 5
+    domain_freq_threshold: 100
     domains_to_fetch:
         - change.org
