@@ -45,7 +45,7 @@ def createTableIfNotExists(db_path, table, columns, dtypes=None):
         query = f'''CREATE TABLE IF NOT EXISTS {table}({schema})'''
         cur.execute(query)
 
-    print(f"Table {table} if it not already existed")
+    print(f"Table {table} created if it not already existed.")
 
 
 def get_folder(folder):
