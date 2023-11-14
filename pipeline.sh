@@ -26,4 +26,5 @@ printf 'FUNDPET 3: fetching websites'
 python fetch.py --query=$query --config=config.yaml
 
 # ## 5. scrap content from fetched websites
-# # python scrappers/${domain}_scrapper.py
+printf 'FUNDPET 4: scrapping'
+python scrapping.py --query=$query --config=config.yaml

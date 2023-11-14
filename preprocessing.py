@@ -118,12 +118,14 @@ for domain in IGNOREDOMAINS:
 
 print(f"Left {len(df)} entries.")
 
+
 # (1d) Drop urls equals to their domain
 def fn(s):
     s = s.replace('https://', '').replace('http://', '')
     s = s.replace('www.', '')
     s = re.sub(r"/$", "", s)
     return s
+
 
 urlSameAsDom = (df['resolvedUrl'].fillna("").apply(fn) == df['domain'])
 df = df.assign(urlSameAsDomain=urlSameAsDom)
@@ -144,11 +146,11 @@ for domain in IGNOREURLSSAMEASDOM:
 uid_suffix = df.groupby('uid', as_index=False)['uid'].cumcount().astype(str)
 df = df.assign(uid=df.uid+'_'+uid_suffix)
 df = df.assign(htmlPath='')
-
+df = df.assign(scrapped=False)
 df = df.assign(fetched=False)
 columns = [
     'permalink', 'uid', 'text', 'resolvedUrl',
-    'platform', 'query', 'domain', 'date', 'fetched', 'htmlPath'
+    'platform', 'query', 'domain', 'date', 'fetched', 'htmlPath', 'scrapped'
     ]
 
 update_preprocessed(DBPATH, query, df, columns)
