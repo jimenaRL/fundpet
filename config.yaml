@@ -12,6 +12,7 @@ ignored_domains:
   - soundcloud.com
   - t.co
   - t.me
+  - twitch.tv
   - twitter.com
   - youtube.com
   - youtu.be
@@ -72,7 +73,7 @@ queries:
       - avaaz.org
       - change.org
   SoMe4DemRomanian:
-    id: 398399 #  FAILS SOME WEEKS...
+    id: 398399
     domain_freq_threshold: 100
     domains_to_fetch:
         - change.org
