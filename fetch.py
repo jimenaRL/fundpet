@@ -12,7 +12,7 @@ from utils import \
     get_dbpath, \
     retrieve_table, \
     get_fetch_paths, \
-    retrieve_not_fetched_urls_from_domain,\
+    retrieve_not_fetched_urls_from_domain, \
     update_fetched
 
 ap = ArgumentParser()
@@ -30,7 +30,7 @@ with open(config, "r") as fh:
     config = yaml.load(fh, Loader=yaml.SafeLoader)
 
 DBPATH = get_dbpath()
-NBTHREADS= config['nb_threads_fetch']
+NBTHREADS = config['nb_threads_fetch']
 domains_to_fetch = config['queries'][query]['domains_to_fetch']
 domain_freq_th = config['queries'][query]['domain_freq_threshold']
 

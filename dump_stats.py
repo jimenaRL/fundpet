@@ -12,11 +12,16 @@ df = pd.DataFrame(
     columns=['path', 'nb_entries'])
 
 
-df = df.assign(file=df.path.apply(lambda s: os.path.split(s)[-1]))
-df = df.assign(lang=df.file.apply(lambda s: s.split('SoMe4Dem')[1].split('_')[0]))
-df = df.assign(platform=df.file.apply(lambda s: s[6:].split('_SoMe4Dem')[0]))
-df = df.assign(start=df.file.apply(lambda s: s.split('start_')[1].split('_end')[0][:7]))
-df = df.assign(end=df.file.apply(lambda s: s.split('end_')[1][:-4][:7]))
+df = df.assign(
+    file=df.path.apply(lambda s: os.path.split(s)[-1]))
+df = df.assign(
+    lang=df.file.apply(lambda s: s.split('SoMe4Dem')[1].split('_')[0]))
+df = df.assign(
+    platform=df.file.apply(lambda s: s[6:].split('_SoMe4Dem')[0]))
+df = df.assign(
+    start=df.file.apply(lambda s: s.split('start_')[1].split('_end')[0][:7]))
+df = df.assign(
+    end=df.file.apply(lambda s: s.split('end_')[1][:-4][:7]))
 
 df.drop(columns=['path'], inplace=True)
 

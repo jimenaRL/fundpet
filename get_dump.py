@@ -40,7 +40,7 @@ start_timestamp, end_timestamp = get_date(start, end)
 
 PLATFORMS = config['platforms']
 
-QUERYID  = config['queries'][query]['id']
+QUERYID = config['queries'][query]['id']
 
 
 # 1. Major parameters
