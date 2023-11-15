@@ -60,6 +60,7 @@ for platform in PLATFORMS:
         continue
 df = pd.concat(df)
 
+
 # 1. Process dump
 ########################################################
 
@@ -101,6 +102,12 @@ with tempfile.NamedTemporaryFile() as tmp1:
         os.system(' '.join(command_pipe))
         df = pd.read_csv(tmp2.name, dtype=str) \
             .rename(columns={'resolved_url': 'resolvedUrl'})
+
+
+n = len(df)
+df = df[~df.resolvedUrl.isnull()]
+print(f"Drop {n - len(df)} entries with null `resolvedUrl`, left {len(df)}.")
+
 
 # (1c) Get domain names from URLs
 print('Getting domain names...')
