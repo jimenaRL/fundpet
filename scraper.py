@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 from bs4 import BeautifulSoup
 import trafilatura
 
@@ -62,40 +63,37 @@ class ChangeOrg(Scraper):
         if self.soup.find("a", attrs=attrs):
             for author in self.soup.find_all("a", attrs=attrs):
                 self.res["author"] = author.get_text()
-                self.res["balise"] = "data-testid"
         elif self.soup.find("a", class_="corgi-1ct102y"):
             for author in self.soup.find_all("a", class_="corgi-1ct102y"):
                 self.res["author"] = author.get_text()
-                self.res["balise"] = "class"
         # find the organised to which the petition is addressed
-        # for addressed in self.soup.find_all("div", class_="corgi-z5fbhm"):
-        #     addressed = addressed.find(
-        #         "div", class_="corgi-jfeg2y").get_text()
-        #     if "Adself.ressée à" in addressed or "Petition to" in addressed:
-        #         c = "corgi-1lk6gf3"
-        #         self.res["addressedd_to"] = addressed.find(
-        #             "div", class_=c).get_text()
-        #     else:
-        #         self.res["addressed_to"] = ""
+        for addressed in self.soup.find_all("div", class_="corgi-z5fbhm"):
+            atext = addressed.find("div", class_="corgi-jfeg2y").get_text()
+            if "Adressée à" in atext or "Petition to" in atext or "Petición para" in atext:
+                self.res["addressed_to"] = addressed.find(
+                    "div", class_="corgi-1lk6gf3").get_text()
+            else:
+                self.res["addressed_to"] = ""
         sign = self.soup.find("span", class_="corgi-fnmi1p")
         if sign:
             # volume of signature that have been collected the day of the scrap
-            self.res["stat"] = (sign.get_text().replace("\u202f", ""))
+            self.res["signatures"] = (sign.get_text().replace("\u202f", ""))
         goal = self.soup.find("span", class_="corgi-1xmxvqx")
         if goal:
             # the goal
             self.res["goal"] = int(
-                goal.get_text().replace("\u202f", "").replace(',', '').replace('.', ''))
+                goal.get_text()
+                .replace("\u202f", "").replace(',', '').replace('.', ''))
         date = self.soup.find("div", class_="corgi-1lk6gf3")
         if date:
             # the date of petition
-            self.res["date"] = date.get_text()
+            self.res["launched"] = date.get_text()
         text = self.soup.find("div", attrs={"data-qa": "description-content"})
         if text:
             # the text
             self.res["text"] = text.get_text()
 
-        # # add extra info with Trafilatura
+        # add extra info with Trafilatura
         # with open(self.path) as f:
         #     traf = json.loads(
         #         trafilatura.extract(
@@ -104,4 +102,6 @@ class ChangeOrg(Scraper):
         #             include_comments=True,
         #             include_formatting=True,
         #             output_format='json'))
+        # traf.update({"source_hostname": traf['source-hostname']})
+        # del traf['source-hostname']
         # self.res.update({f"traf_{k}": v for k, v in traf.items()})

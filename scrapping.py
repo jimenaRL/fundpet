@@ -17,6 +17,14 @@ args = ap.parse_args()
 config = args.config
 query = args.query
 
+# DOMAINSTOSCRAPE = config['queries'][query]['domains_to_fetch']
+DOMAINSTOSCRAPE = ['change.org']
+
+SCRAPPER = {
+    "change.org": ChangeOrg
+}
+
+
 # 0. Set things
 ########################################################
 
@@ -30,29 +38,33 @@ _, _, outdir = get_fetch_paths(query)
 # 1.Retrive data from table
 ########################################################
 table = query
-df = retrieve_table(DBPATH, table, verbose=True)
+all_df = retrieve_table(DBPATH, table, verbose=True)
 
-df = df[df.fetched == '1']
-df = df[df.scrapped == '0']
+for domain in DOMAINSTOSCRAPE:
 
-df = df.assign(htmlPath=df.htmlPath.apply(lambda p: os.path.join(outdir, p)))
+    df = all_df[all_df.fetched == '1']
+    df = df[df.scrapped == '0']
 
-########## HOT FIX ##########
-df = df.assign(pathExists=df.htmlPath.apply(os.path.exists))
-df = df[df.pathExists]
-df = df.groupby('htmlPath').first().reset_index()
-#############################
+    df = df.assign(htmlPath=df.htmlPath.apply(lambda p: os.path.join(outdir, p)))
 
-records = []
-for htmlPath in tqdm(df['htmlPath'].tolist()[:30]):
-    scraper = ChangeOrg(htmlPath)
-    scraper.scrappe()
-    res = scraper.response()
-    records.append(json.dumps(res))
-    del scraper
+    ########## HOT FIX ##########
+    df = df.assign(pathExists=df.htmlPath.apply(os.path.exists))
+    df = df[df.pathExists]
+    df = df.groupby('htmlPath').first().reset_index()
+    #############################
 
-records = [json.loads(r) for r in records]
-dr = pd.DataFrame(records)
+    records = []
+    htmlPaths = df[df.domain == domain]['htmlPath'].tolist()
+    print(f"Scrapping {len(htmlPaths)} html contents for domain {domain}...")
+    for htmlPath in tqdm(htmlPaths):
+        scraper = SCRAPPER[domain](htmlPath)
+        scraper.scrappe()
+        res = scraper.response()
+        records.append(json.dumps(res))
+        del scraper
 
-columns = ['permalink', 'uid',  'resolvedUrl', 'htmlPath']
-update_scraped(DBPATH, df[columns], dr, query)
+    records = [json.loads(r) for r in records]
+    dr = pd.DataFrame(records)
+
+    columns = ['permalink', 'uid',  'resolvedUrl', 'htmlPath', 'domain']
+    update_scraped(DBPATH, df[columns], dr, query)

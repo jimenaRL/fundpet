@@ -14,37 +14,8 @@ if 'LFFOLDER' not in os.environ:
     raise ValueError('`LFFOLDER` environment variable must be set.')
 
 
-def checkDBexists(db_path, raiseError=True):
-    dbExists = os.path.exists(db_path)
-    if dbExists:
-        return True
-    else:
-        if raiseError:
-            raise FileNotFoundError(
-                f"Unnable to find database at: '{db_path}'.")
-        else:
-            return False
-
-
-def createTableIfNotExists(db_path, table, columns, dtypes=None):
-
-    checkDBexists(db_path, raiseError=False)
-
-    ncols = len(columns)
-    qvals = ''.join('?,' * ncols)[:-1]
-    if not dtypes:
-        schema = ' '.join([f"{k} TEXT, " for k in columns])
-    else:
-        schema = ' '.join([f"{k} {d}, " for k, d in zip(columns, dtypes)])
-    uniques = ' '.join([f" {k}," for k in columns])[:-1]
-    schema += f'UNIQUE({uniques})'
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        query = f'''CREATE TABLE IF NOT EXISTS {table}({schema})'''
-        cur.execute(query)
-
-    print(f"Table {table} created if it not already existed.")
+def get_dbpath():
+    return os.path.join(os.environ['LFFOLDER'], 'fundpet.db')
 
 
 def get_folder(folder):
@@ -54,10 +25,6 @@ def get_folder(folder):
     folder_path = os.path.join(os.environ['LFFOLDER'], folder)
     os.makedirs(folder_path, exist_ok=True)
     return folder_path
-
-
-def get_dbpath():
-    return os.path.join(os.environ['LFFOLDER'], 'fundpet.db')
 
 
 def get_path(platform, query, start, end, folder):
@@ -96,146 +63,3 @@ def get_date(start, end):
         start_timestamp = start
 
     return start_timestamp, end_timestamp
-
-
-def populateSqlite(db_path, table, records, columns, dtypes=None):
-
-    if not checkDBexists(db_path, raiseError=False):
-        print(f"Creating new sqlite database at {db_path}.")
-
-    createTableIfNotExists(db_path, table, columns, dtypes)
-
-    qvals = ''.join('?,' * len(columns))[:-1]
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.executemany(
-            f"INSERT OR REPLACE INTO {table} VALUES({qvals})", records)
-        print(f"SQLITE: table {table} populated.")
-
-
-def retrieve_table(db_path, table, verbose=True):
-
-    query = f"SELECT * FROM {table}"
-
-    if verbose:
-        print(f"Quering sqlite database at {db_path} with `{query[:100]}`... ")
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(query)
-        columns = list(map(lambda x: x[0], cur.description))
-        res = cur.fetchall()
-
-    df = pd.DataFrame(res, columns=columns)
-
-    return df
-
-
-def retrieve_not_fetched_urls_from_domain(db_path, query, domains, verbose=True):
-
-    checkDBexists(db_path)
-
-    table = query
-    doms = ','.join([f"'{d}'" for d in domains])
-    columns = ['uid', 'resolvedUrl', '']
-    columns_str = ','.join(columns)
-    query = f"""
-        SELECT uid, resolvedUrl, domain FROM {table}
-        where domain IN ({doms})
-        AND fetched=='0'"""
-
-    if verbose:
-        print(f"Quering sqlite database at {db_path} with `{query[:100]}`... ")
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(query)
-        res = cur.fetchall()
-
-    df = pd.DataFrame(res, columns=columns, dtype=str)
-
-    return df
-
-
-def update_fetched(db_path, df, query, verbose=True):
-
-    table = query
-
-    fetched_uids = df.uid.tolist()
-    qvalues = ', '.join('?' for _ in range(len(df)))
-    q1 = f"""
-        UPDATE {table}
-        SET fetched = '1'
-        WHERE uid in ({qvalues})
-    """
-    if verbose:
-        print(
-            f"Quering sqlite database at {db_path} with `{q1}`.")
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(q1, fetched_uids)
-        res = cur.fetchall()
-
-    fetched_paths = df.path.tolist()
-    q2 = f"""
-        UPDATE {table}
-        SET htmlPath=?
-        WHERE uid=?
-    """
-    data = [[path, uid] for path, uid in zip(fetched_paths, fetched_uids)]
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.executemany(q2, data)
-        res = cur.fetchall()
-
-
-def update_scraped(db_path, df, dr, query, verbose=True):
-
-    # update main table
-    table = query
-    fetched_uids = df.uid.tolist()
-    qvalues = ', '.join('?' for _ in range(len(df)))
-    q1 = f"""
-        UPDATE {table}
-        SET scrapped = '1'
-        WHERE uid in ({qvalues})
-    """
-    if verbose:
-        print(
-            f"Quering sqlite database at {db_path} with `{q1}`.")
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(q1, fetched_uids)
-        cur.fetchall()
-
-    # create and populate content table
-    dr = pd.concat([df, dr], axis=1)
-    table = f"{query}_htmlContent"
-    columns = dr.columns.tolist()
-    createTableIfNotExists(db_path, table, columns)
-    records = dr.values.tolist()
-    populateSqlite(db_path, table, records, columns)
-
-
-def update_preprocessed(db_path, query, df, columns):
-
-    createTableIfNotExists(db_path, table, columns)
-
-    # get already fetch urls
-    query = f"""
-        SELECT uid from {table} WHERE fetched='1'
-    """
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        cur.execute(query)
-        res = cur.fetchall()
-    df_fetched = pd.DataFrame(res, columns=['uid'], dtype=str)
-
-    # remove already fetched urls
-    df = df[~df['uid'].isin(df_fetched.uid.tolist())]
-
-    records = df[columns].values.tolist()
-
-    populateSqlite(db_path, table, records, columns)

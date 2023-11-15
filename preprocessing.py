@@ -8,8 +8,8 @@ import pandas as pd
 from tqdm import tqdm
 from ural import get_domain_name, urls_from_text, is_typo_url
 from argparse import ArgumentParser
-from utils import get_date, get_path, get_dbpath, get_folder, populateSqlite, \
-    update_preprocessed
+from utils import get_date, get_path, get_dbpath, get_folder
+from sqlite import updatePreprocessed
 
 ap = ArgumentParser()
 ap.add_argument('--config', type=str)
@@ -40,8 +40,6 @@ START, END = get_date(start, end)
 
 PREPROCESSECOLUMNS = [
         'permalink', 'uid', 'text', 'externalUrl', 'platform', 'query', 'date']
-
-print(f'\n~~~~~~~~~~~~~~ {query} ~~~~~~~~~~~~~~')
 
 df = []
 
@@ -94,17 +92,18 @@ with tempfile.NamedTemporaryFile() as tmp1:
             "minet",
             "resolve",
             "urlFromText",
-            f"-i {tmp1.name}",
-            ">",
+            "-i",
+            f"{tmp1.name}",
+            "-o",
             f"{tmp2.name}"
         ]
-        # subprocess.run(command_pipe, shell=True)
+        # subprocess.Popen(command_pipe)
         os.system(' '.join(command_pipe))
         df = pd.read_csv(tmp2.name, dtype=str) \
             .rename(columns={'resolved_url': 'resolvedUrl'})
 
 # (1c) Get domain names from URLs
-print('Getting domain names')
+print('Getting domain names...')
 df = df.assign(
     domain=df['resolvedUrl'].fillna("").apply(get_domain_name))
 
@@ -115,7 +114,7 @@ for domain in IGNOREDOMAINS:
         print(f"Removing {n} URLs whose domain name is {domain}")
         df = df[df.domain != domain]
 
-print(f"Left {len(df)} entries.")
+print(f"left {len(df)} entries.")
 
 
 # (1d) Drop urls equals to their domain
@@ -152,4 +151,4 @@ columns = [
     'platform', 'query', 'domain', 'date', 'fetched', 'htmlPath', 'scrapped'
     ]
 
-update_preprocessed(DBPATH, query, df, columns)
+updatePreprocessed(query, df[columns])

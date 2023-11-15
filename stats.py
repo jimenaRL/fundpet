@@ -7,11 +7,12 @@ from ural import get_domain_name
 from argparse import ArgumentParser
 from utils import \
     get_date, \
-    get_path, \
-    get_dbpath, \
-    get_folder, \
+    get_dbpath
+from sqlite import \
     populateSqlite, \
-    retrieve_table
+    retrieve_table, \
+    updateUrlCounts, \
+    updateDomainCounts
 
 ap = ArgumentParser()
 ap.add_argument('--config', type=str)
@@ -29,14 +30,11 @@ with open(config, "r") as fh:
 
 DOMAINNAMETHRESHOLD = config['queries'][query]['domain_freq_threshold']
 PLATFORMS = config['platforms']
-DBPATH = get_dbpath()
 
 
 # 1. Retrive data from table
 ########################################################
-
-table = query
-df = retrieve_table(DBPATH, table, verbose=True)
+df = retrieve_table(table=query, verbose=True)
 n = len(df)
 
 # 2. Make aggregations
@@ -44,20 +42,20 @@ n = len(df)
 
 # (2a) Agreggate URLs
 print("~~~~~~~~~~~~~~~~~~~~~~~")
-resolvedUrl_counts = df['resolvedUrl'].value_counts()
-resolvedUrl_counts = resolvedUrl_counts \
+url_counts = df['resolvedUrl'].value_counts()
+url_counts = url_counts \
     .to_frame() \
     .reset_index() \
     .rename(columns={"count": "urlCount"})
-u = len(resolvedUrl_counts)
+u = len(url_counts)
 print(
     f"There are {u} unique urls of a total of {n} ({100*u/n:.2f}%)")
 
-df = df.merge(resolvedUrl_counts, on='resolvedUrl')
+df = df.merge(url_counts, on='resolvedUrl')
 df = df.groupby('resolvedUrl').first().reset_index() \
     .sort_values(by='urlCount', ascending=False)
 print("Most frequents Urls:")
-print(resolvedUrl_counts.head(10))
+print(url_counts.head(10))
 
 # (2b) Domains stats
 print("~~~~~~~~~~~~~~~~~~~~~~~")
@@ -65,7 +63,7 @@ domain_counts = df['domain'].value_counts()
 domain_counts = domain_counts \
     .to_frame() \
     .reset_index() \
-    .rename(columns={"count": "domainCounts"})
+    .rename(columns={"count": "domainCount"})
 d1 = len(domain_counts)
 
 print(f"There are {d1} unique domains.")
@@ -74,12 +72,6 @@ print(domain_counts.head(5))
 
 # 2. Make exports
 ########################################################
-table = f'{query}_resolvedUrlCounts'
-columns = ["resolvedUrl", "urlCount"]
-records = resolvedUrl_counts[columns].values.tolist()
-populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
+updateUrlCounts(query, url_counts[["resolvedUrl", "urlCount"]])
 
-table = f'{query}_domainCounts'
-columns = ["domain", "domainCounts"]
-records = domain_counts[columns].values.tolist()
-populateSqlite(DBPATH, table, records, columns, dtypes=['TEXT', 'INT'])
+updateDomainCounts(query, domain_counts[["domain", "domainCount"]])
