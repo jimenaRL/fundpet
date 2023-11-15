@@ -36,7 +36,6 @@ IGNOREURLSSAMEASDOM = config['ignored_urls_same_as_domain']
 PLATFORMS = config['platforms']
 
 DBPATH = get_dbpath()
-PREPROCESSEDFOLDER = get_folder('preprocessed')
 START, END = get_date(start, end)
 
 PREPROCESSECOLUMNS = [
