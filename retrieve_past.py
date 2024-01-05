@@ -7,8 +7,7 @@ client_id = os.environ['client_id']
 client_secret = os.environ['client_secret']
 
 # first_monday
-# m1 = datetime.strptime("2023-05-15", "%Y-%m-%d")
-m1 = datetime.strptime("2023-09-11", "%Y-%m-%d")
+m1 = datetime.strptime("2023-05-15", "%Y-%m-%d")
 
 nb_weeks = 27
 
@@ -40,3 +39,6 @@ for query in QUERIES:
         ]
         # subprocess.run(command_pipe, shell=True)
         os.system(' '.join(command_pipe))
+
+
+os.system('python dump_stats.py')

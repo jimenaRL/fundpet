@@ -1,7 +1,7 @@
 import os
 from glob import glob
 import pandas as pd
-from utils import get_dbpath, createTableIfNotExists, populateSqlite
+from sqlite import updateDumpStatsTable, showAggDumpStatsTable
 
 LFFOLDER = os.environ['LFFOLDER']
 dumpsWildCard = os.path.join(LFFOLDER, 'dumps', '*')
@@ -19,17 +19,12 @@ df = df.assign(
 df = df.assign(
     platform=df.file.apply(lambda s: s[6:].split('_SoMe4Dem')[0]))
 df = df.assign(
-    start=df.file.apply(lambda s: s.split('start_')[1].split('_end')[0][:7]))
+    start=df.file.apply(lambda s: s.split('start_')[1].split('_end')[0][:10]))
 df = df.assign(
-    end=df.file.apply(lambda s: s.split('end_')[1][:-4][:7]))
+    end=df.file.apply(lambda s: s.split('end_')[1][:-4][:10]))
 
 df.drop(columns=['path'], inplace=True)
 
+updateDumpStatsTable(df)
 
-path = get_dbpath()
-table = 'stats'
-columns = ['file', 'lang', 'platform', 'nb_entries', 'start', 'end']
-sqdtypes = ['TXT', 'TXT', 'TXT', 'INT', 'TXT', 'TXT']
-createTableIfNotExists(path, table, columns, sqdtypes)
-records = df[columns].values.tolist()
-populateSqlite(path, table, records, columns, sqdtypes)
+print(showAggDumpStatsTable())

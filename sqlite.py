@@ -29,14 +29,25 @@ createDomainCountsTableTemplate = """
     CREATE TABLE {query}_domainCounts(
         domain TEXT PRIMARY KEY UNIQUE,
         domainCount INTEGER NOT NULL,
-    UNIQUE(domain,  domainCount));
+    UNIQUE(domain));
 """
 
 createUrlCountsTableTemplate = """
     CREATE TABLE {query}_urlCounts(
         resolvedUrl TEXT PRIMARY KEY UNIQUE,
         urlCount INTEGER NOT NULL,
-    UNIQUE(resolvedUrl,  urlCount));
+    UNIQUE(resolvedUrl));
+"""
+
+createdumpStatsTemplate = """
+    CREATE TABLE dumpStats(
+        file TEXT PRIMARY KEY UNIQUE,
+        lang TEXT NOT NULL,
+        platform TEXT NOT NULL,
+        nb_entries INTEGER NOT NULL,
+        start TEXT NOT NULL,
+        end TEXT NOT NULL,
+    UNIQUE(file));
 """
 
 
@@ -80,32 +91,32 @@ def checkTableExists(table, raiseError=False):
             return False
 
 
-def createUniqueTable(table, columns, dtypes=None):
+# def createUniqueTable(table, columns, dtypes=None):
 
-    checkDBexists(raiseError=False)
+#     checkDBexists(raiseError=False)
 
-    ncols = len(columns)
-    if not dtypes:
-        schema = ' '.join([f"{k} TEXT, " for k in columns])
-    else:
-        schema = ' '.join([f"{k} {d}, " for k, d in zip(columns, dtypes)])
-    uniques = ' '.join([f" {k}," for k in columns])[:-1]
-    schema += f'UNIQUE({uniques})'
+#     ncols = len(columns)
+#     if not dtypes:
+#         schema = ' '.join([f"{k} TEXT, " for k in columns])
+#     else:
+#         schema = ' '.join([f"{k} {d}, " for k, d in zip(columns, dtypes)])
+#     uniques = ' '.join([f" {k}," for k in columns])[:-1]
+#     schema += f'UNIQUE({uniques})'
 
-    query = f'''CREATE TABLE {table}({schema})'''
-    with sqlite3.connect(DBPATH) as con:
-        cur = con.cursor()
-        cur.execute(query)
+#     query = f'''CREATE TABLE {table}({schema})'''
+#     with sqlite3.connect(DBPATH) as con:
+#         cur = con.cursor()
+#         cur.execute(query)
 
-    print(f"SQLITE: Table {table} created.")
+#     print(f"SQLITE: Table {table} created.")
 
 
-def createUniqueTableIfNotExists(table, columns, dtypes=None):
+# def createUniqueTableIfNotExists(table, columns, dtypes=None):
 
-    checkDBexists(raiseError=False)
+#     checkDBexists(raiseError=False)
 
-    if not checkTableExists(table, raiseError=False):
-        createUniqueTable(table, columns, dtypes=dtypes)
+#     if not checkTableExists(table, raiseError=False):
+#         createUniqueTable(table, columns, dtypes=dtypes)
 
 
 def populateSqlite(table, records, columns):
@@ -181,6 +192,57 @@ def createDomainCountsTableIfNotExists(query):
         cur.execute(query)
 
     print(f"SQLITE: Table {table} created.")
+
+
+def createDumpStatsTableIfNotExists():
+
+    table = f'dumpStats'
+    if checkTableExists(table, raiseError=False):
+        return
+
+    with sqlite3.connect(DBPATH) as con:
+        cur = con.cursor()
+        cur.execute(createdumpStatsTemplate)
+
+    print(f"SQLITE: Table {table} created.")
+
+
+def updateDumpStatsTable(df):
+    createDumpStatsTableIfNotExists()
+    columns = [
+        'file',
+        'lang',
+        'platform',
+        'nb_entries',
+        'start',
+        'end',
+    ]
+    records = df[columns].values.tolist()
+    qvals = ''.join('?,' * len(columns))[:-1]
+    columns_ = ','.join(columns)
+    insert = f"""
+        INSERT OR REPLACE INTO dumpStats ({columns_})
+        VALUES ({qvals})
+    """
+    with sqlite3.connect(DBPATH) as con:
+        cur = con.cursor()
+        cur.executemany(insert, records)
+        res = cur.fetchall()
+    print(f"SQLITE: Table dumpStats updated.")
+
+
+def showAggDumpStatsTable():
+    query = """
+    SELECT lang,platform,SUM(nb_entries)
+    FROM dumpStats
+    GROUP BY lang,platform
+    ORDER BY SUM(nb_entries) DESC"""
+
+    with sqlite3.connect(DBPATH) as con:
+        cur = con.cursor()
+        cur.execute(query)
+        res = cur.fetchall()
+    return res
 
 
 def updatePreprocessed(query, df):
@@ -316,30 +378,30 @@ def update_fetched(df, query, verbose=True):
         res = cur.fetchall()
 
 
-def update_scraped(df, dr, query, verbose=True):
+# def update_scraped(df, dr, query, verbose=True):
 
-    # update main table
-    table = query
-    fetched_uids = df.uid.tolist()
-    qvalues = ', '.join('?' for _ in range(len(df)))
-    q1 = f"""
-        UPDATE {table}
-        SET scrapped = '1'
-        WHERE uid in ({qvalues})
-    """
-    if verbose:
-        print(
-            f"Quering sqlite database at {DBPATH} with `{q1}`.")
+#     # update main table
+#     table = query
+#     fetched_uids = df.uid.tolist()
+#     qvalues = ', '.join('?' for _ in range(len(df)))
+#     q1 = f"""
+#         UPDATE {table}
+#         SET scrapped = '1'
+#         WHERE uid in ({qvalues})
+#     """
+#     if verbose:
+#         print(
+#             f"Quering sqlite database at {DBPATH} with `{q1}`.")
 
-    with sqlite3.connect(DBPATH) as con:
-        cur = con.cursor()
-        cur.execute(q1, fetched_uids)
-        cur.fetchall()
+#     with sqlite3.connect(DBPATH) as con:
+#         cur = con.cursor()
+#         cur.execute(q1, fetched_uids)
+#         cur.fetchall()
 
-    # create and populate content table
-    dr = pd.concat([df, dr], axis=1)
-    table = f"{query}_htmlContent"
-    columns = dr.columns.tolist()
-    createTableIfNotExists(table, columns)
-    records = dr.values.tolist()
-    populateSqlite(table, records, columns)
+#     # create and populate content table
+#     dr = pd.concat([df, dr], axis=1)
+#     table = f"{query}_htmlContent"
+#     columns = dr.columns.tolist()
+#     createTableIfNotExists(table, columns)
+#     records = dr.values.tolist()
+#     populateSqlite(table, records, columns)

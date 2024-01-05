@@ -19,6 +19,9 @@ ignored_domains:
   - weezevent.com
 ignored_urls:
   - https://www.helloasso.com/page-introuvable
+  - https://www.mesopinions.com/fr
+  - https://support.verse.me/hc/es
+  - https://www.mesopinions.com/fr
 ignored_urls_same_as_domain:
   - change.org
   - doneeractie.nl

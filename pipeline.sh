@@ -18,7 +18,7 @@ echo "------------------------------------------------------------------"
 
 # # 1. dump download
 # printf 'FUNDPET 0: getting dumps'
-# python get_dump.py --query=$query --config=config.yaml --client_id=$client_id --client_secret=$client_secret --start=$start --end=$end
+python get_dump.py --query=$query --config=config.yaml --client_id=$client_id --client_secret=$client_secret --start=$start --end=$end
 
 # ## 2. preprocess dump
 printf 'FUNDPET 1: preprocessing dumps'
@@ -26,6 +26,7 @@ python preprocessing.py --query=$query --config=config.yaml --start=$start --end
 
 ## 3. compute stats
 printf 'FUNDPET 2: computing stats'
+python stats.py --query=$query --config=config.yaml
 python stats.py --query=$query --config=config.yaml
 
 # # # 4. prepare files and fetch websites
