@@ -1,5 +1,7 @@
 # `fundpet`
 
+## PREPROCESSING STEPS
+
 * Load dump
 * Extract URLs from posts text
 * Explode list of found urls
