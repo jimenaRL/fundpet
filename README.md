@@ -14,7 +14,7 @@
 3 Remove bad formatted urls (empty, typos)
 4 Resolve urls
 5 Get domain names
-6 Remove entries from unwanted domains (instagram, paypal, etc.)
+6 Remove entries from unwanted domains (instagram, paypal, etc., see config.yaml file)
 7 Drop entries exactly equal to their domain (change.org, mesopinions.com/fr)
 8 Append suffix to LF uids
 9 Update SQLITE db with new valid entries
