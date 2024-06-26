@@ -3,7 +3,7 @@
 
 ## 1. DOWNLOAD LF DUMP
 
-## 2. PREPROCESSING STEPS
+## 2. PREPROCESS DATA
 
 
  
@@ -19,3 +19,4 @@
 8 Append suffix to LF uids
 9 Update SQLITE db with new valid entries
 ```
+## 3. FETCH WEBSITES
