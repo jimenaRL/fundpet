@@ -14,5 +14,5 @@
 6 Remove entries from unwanted domains (instagram, paypal, etc.)
 7 Drop entries exactly equal to their domain (change.org, mesopinions.com/fr)
 8 Append suffix to LF uids
-9 Update SQLITE db with new valid entriesl
+9 Update SQLITE db with new valid entries
 ```
