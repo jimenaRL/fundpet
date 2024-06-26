@@ -19,4 +19,9 @@
 8 Append suffix to LF uids
 9 Update SQLITE db with new valid entries
 ```
-## 3. FETCH WEBSITES
+
+## 3. COMPUTE STATS
+
+## 4. FETCH WEBSITES
+
+## 5. SCRAP CONTENT (to do)
