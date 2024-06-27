@@ -2,108 +2,85 @@
 # coding: utf-8
 
 import os
-import yaml
 import json
 import requests
 import pandas as pd
 from itertools import chain
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta, MO
-from argparse import ArgumentParser
 from utils import get_date, get_path
 
-# parse arguments
-ap = ArgumentParser()
-ap.add_argument('--config', type=str)
-ap.add_argument('--query', type=str)
-ap.add_argument('--client_id', type=str)
-ap.add_argument('--client_secret', type=str)
-ap.add_argument('--start', type=str, default=None)
-ap.add_argument('--end', type=str, default=None)
-args = ap.parse_args()
-config = args.config
-query = args.query
-client_id = args.client_id
-client_secret = args.client_secret
-start = args.start
-end = args.end
 
-print(f'\n~~~~~~~~~~~~~~ {query} ~~~~~~~~~~~~~~')
+def getDump(
+    config,
+    query,
+    query_id,
+    client_id,
+    client_secret,
+    platform,
+    start,
+    end,
+    logger):
 
-# 0. Set things
-########################################################
-# load config and set parameters
-with open(config, "r") as fh:
-    config = yaml.load(fh, Loader=yaml.SafeLoader)
+    # 1. Major parameters
+    ########################################################
 
-start_timestamp, end_timestamp = get_date(start, end)
+    # 10.000 is the max allowed by the API. Do not change this !!!!
+    query_size_limit = 10000
 
-PLATFORMS = config['platforms']
-
-QUERYID = config['queries'][query]['id']
+    # don't change
+    collect_retweets = True
 
 
-# 1. Major parameters
-########################################################
+    # 2. Authentication for the API (this remains unchanged)
+    ########################################################
 
-# 10.000 is the max allowed by the API. Do not change this !!!!
-query_size_limit = 10000
+    api_url = "https://radarly.linkfluence.com/1.0/"
 
-# don't change
-collect_retweets = True
+    # set your credentials
+    credentials = {
+      "client_id": client_id,
+      "client_secret": client_secret
+    }
 
+    data = 'grant_type=client_credentials&code=xxxxxx&client_id='
+    data += credentials["client_id"] + '&client_secret='
+    data += credentials["client_secret"] + '&scope=listening'
 
-# 2. Authentication for the API (this remains unchanged)
-########################################################
+    token_byte = requests.post(
+        'https://oauth.linkfluence.com/oauth2/token',
+        headers={'Content-Type': 'application/x-www-form-urlencoded'},
+        data=data)
 
-api_url = "https://radarly.linkfluence.com/1.0/"
+    token = json.loads(token_byte.content.decode("utf-8"))["access_token"]
 
-# set your credentials
-credentials = {
-  "client_id": client_id,
-  "client_secret": client_secret
-}
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token}
 
-data = 'grant_type=client_credentials&code=xxxxxx&client_id='
-data += credentials["client_id"] + '&client_secret='
-data += credentials["client_secret"] + '&scope=listening'
-
-token_byte = requests.post(
-    'https://oauth.linkfluence.com/oauth2/token',
-    headers={'Content-Type': 'application/x-www-form-urlencoded'},
-    data=data)
-
-token = json.loads(token_byte.content.decode("utf-8"))["access_token"]
-
-headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token}
-
-# project ID // https://radarly.linkfluence.com/dashboard#/project/5560/
-# This is the id of the radarly project dataset,remains unchanged
-PID = 5760
+    # project ID // https://radarly.linkfluence.com/dashboard#/project/5560/
+    # This is the id of the radarly project dataset,remains unchanged
+    PID = 5760
 
 
-# 3. Retrieving documents with the query
-########################################################
+    # 3. Retrieving documents with the query
+    ########################################################
 
-search_endpoint = api_url + "projects/" + str(PID) + "/inbox/search.json"
+    search_endpoint = api_url + "projects/" + str(PID) + "/inbox/search.json"
 
-ts_end = pd.to_datetime(end_timestamp)
+    ts_end = pd.to_datetime(end)
 
-for platform in PLATFORMS:
-
-    print('\n**Platform: %s' % platform)
+    logger.info('DUMP: platform: %s' % platform)
 
     query_ended = False
-    cell_start_timestamp = start_timestamp
+    cell_start = start
     dfs = []
     while not query_ended:
         payload = {
-          "from": cell_start_timestamp,
-          "to": end_timestamp,
+          "from": cell_start,
+          "to": end,
           "platforms": [platform],
-          "focuses": [{"id": QUERYID, "include": True}],
+          "focuses": [{"id": query_id, "include": True}],
           "limit": query_size_limit,
           "sortOrder": "asc",
           "sortBy": "date",
@@ -124,14 +101,15 @@ for platform in PLATFORMS:
             ts_col = df['date'].apply(pd.to_datetime)
             df = df.rename(columns={'user.id': f'{platform}_id'})
             dfs.append(df)
-            print('%s to %s' % (df['date'].min(), df['date'].max()))
+            logger.info('DUMP: %s to %s' % (df['date'].min(), df['date'].max()))
             if len(data['hits']) < query_size_limit or ts_col.max() > ts_end:
                 query_ended = True
             else:
-                cell_start_timestamp = df.loc[ts_col.argmax(), 'date']
+                cell_start = df.loc[ts_col.argmax(), 'date']
 
     if len(dfs) == 0:
-        continue
+        logger.info("DUMP: nothing found.")
+        return
 
     df = pd.concat(dfs, axis=0, ignore_index=True)
 
@@ -142,6 +120,9 @@ for platform in PLATFORMS:
             lambda x: True if emotion in x else False)
 
     dump_path = get_path(
-        platform, query, start_timestamp, end_timestamp, 'dumps')
+        platform, query, start, end, 'dumps')
     df.to_csv(dump_path, index=False)
-    print(f'Data saved at\n{dump_path}')
+
+    logger.info(f'DUMP: found {len(df)} entries, data saved at {dump_path}')
+
+    return dump_path

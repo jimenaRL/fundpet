@@ -11,6 +11,7 @@ ignored_domains:
   - paypal.com
   - soundcloud.com
   - t.co
+  - x.com
   - t.me
   - twitch.tv
   - twitter.com
@@ -33,7 +34,7 @@ ignored_urls_same_as_domain:
 queries:
   SoMe4DemDutch:
     id: 398400
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
       - doneeractie.nl
       - petities.nl
@@ -41,14 +42,14 @@ queries:
       - geef.nl
   SoMe4DemFrench:
     id: 398394
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - helloasso.com
       - mesopinions.com
       - change.org
   SoMe4DemGerman:
     id: 398397
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
       - change.org
       - innn.it
@@ -58,12 +59,12 @@ queries:
       - spendenseite.de
   SoMe4DemItalian:
     id: 398396
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
       - change.org
   SoMe4DemPolish:
     id: 398398
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
       - zrzutka.pl
       - pomagam.pl
@@ -71,12 +72,12 @@ queries:
       - klubjagiellonski.pl
   SoMe4DemSpanish:
     id: 398395
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
       - avaaz.org
       - change.org
   SoMe4DemRomanian:
     id: 398399
-    domain_freq_threshold: 100
+    warning_domain_freq_threshold: 1
     domains_to_fetch:
         - change.org

@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta, MO
 from utils import get_dbpath
+from time import gmtime, strftime
 
 DBPATH = get_dbpath()
 
@@ -19,6 +20,7 @@ createMainTableTemplate = """
         domain TEXT NOT NULL,
         date TEXT NOT NULL,
         fetched INTEGER NOT NULL,
+        fetchDate TEXT,
         htmlPath TEXT NOT NULL,
         scrapped INTEGER NOT NULL,
     UNIQUE(permalink,  uid));
@@ -134,7 +136,7 @@ def populateSqlite(table, records, columns):
         print(f"SQLITE: table {table} populated with {len(records)} entries.")
 
 
-def retrieve_table(table, verbose=True):
+def retrieve_table(table, verbose=False):
 
     query = f"SELECT * FROM {table}"
 
@@ -152,7 +154,7 @@ def retrieve_table(table, verbose=True):
     return df
 
 
-def createMainTableIfNotExists(query):
+def createMainTableIfNotExists(query, logger):
 
     table = query
     if checkTableExists(table, raiseError=False):
@@ -163,7 +165,7 @@ def createMainTableIfNotExists(query):
         cur = con.cursor()
         cur.execute(query)
 
-    print(f"SQLITE: Table {table} created.")
+    logger.info(f"SQLITE: Table {table} created.")
 
 
 def createUrlCountsTableIfNotExists(query):
@@ -193,62 +195,11 @@ def createDomainCountsTableIfNotExists(query):
 
     print(f"SQLITE: Table {table} created.")
 
-
-def createDumpStatsTableIfNotExists():
-
-    table = f'dumpStats'
-    if checkTableExists(table, raiseError=False):
-        return
-
-    with sqlite3.connect(DBPATH) as con:
-        cur = con.cursor()
-        cur.execute(createdumpStatsTemplate)
-
-    print(f"SQLITE: Table {table} created.")
-
-
-def updateDumpStatsTable(df):
-    createDumpStatsTableIfNotExists()
-    columns = [
-        'file',
-        'lang',
-        'platform',
-        'nb_entries',
-        'start',
-        'end',
-    ]
-    records = df[columns].values.tolist()
-    qvals = ''.join('?,' * len(columns))[:-1]
-    columns_ = ','.join(columns)
-    insert = f"""
-        INSERT OR REPLACE INTO dumpStats ({columns_})
-        VALUES ({qvals})
-    """
-    with sqlite3.connect(DBPATH) as con:
-        cur = con.cursor()
-        cur.executemany(insert, records)
-        res = cur.fetchall()
-    print(f"SQLITE: Table dumpStats updated.")
-
-
-def showAggDumpStatsTable():
-    query = """
-    SELECT lang,platform,SUM(nb_entries)
-    FROM dumpStats
-    GROUP BY lang,platform
-    ORDER BY SUM(nb_entries) DESC"""
-
-    with sqlite3.connect(DBPATH) as con:
-        cur = con.cursor()
-        cur.execute(query)
-        res = cur.fetchall()
-    return res
-
-
-def updatePreprocessed(query, df):
+def updatePreprocessed(query, df, logger):
 
     table = query
-    createMainTableIfNotExists(query)
+    createMainTableIfNotExists(query, logger)
+    df = df.assign(fetchDate=0)
     columns = [
         'permalink',
         'uid',
@@ -259,6 +210,7 @@ def updatePreprocessed(query, df):
         'domain',
         'date',
         'fetched',
+        'fetchDate',
         'htmlPath',
         'scrapped'
     ]
@@ -273,7 +225,7 @@ def updatePreprocessed(query, df):
         cur = con.cursor()
         cur.executemany(insert, records)
         res = cur.fetchall()
-    print(f"SQLITE: Table {table} updated.")
+    logger.info(f"SQLITE: Table {table} updated.")
 
 
 def updateUrlCounts(query, df):
@@ -319,18 +271,18 @@ def updateDomainCounts(query, df):
     print(f"SQLITE: Table {table} updated.")
 
 
-def retrieve_not_fetched_urls_from_domain(query, domains, verbose=True):
+def retrieve_not_fetched_urls_from_domain(query, domains=None, verbose=False):
 
     checkDBexists(DBPATH)
 
     table = query
-    doms = ','.join([f"'{d}'" for d in domains])
-    columns = ['uid', 'resolvedUrl', '']
+    columns = ['uid', 'resolvedUrl', 'domain']
     columns_str = ','.join(columns)
-    query = f"""
-        SELECT uid, resolvedUrl, domain FROM {table}
-        where domain IN ({doms})
-        AND fetched=='0'"""
+    query = f"SELECT {columns_str} FROM {table} where "
+    if domains:
+        doms = ','.join([f"'{d}'" for d in domains])
+        query += f"domain IN ({doms}) AND "
+    query += f"fetched=='0'"""
 
     if verbose:
         print(f"Quering sqlite database at {DBPATH} with `{query[:100]}`... ")
@@ -345,7 +297,7 @@ def retrieve_not_fetched_urls_from_domain(query, domains, verbose=True):
     return df
 
 
-def update_fetched(df, query, verbose=True):
+def updateFetched(df, query, verbose=False):
 
     table = query
 
@@ -356,10 +308,6 @@ def update_fetched(df, query, verbose=True):
         SET fetched = '1'
         WHERE uid in ({qvalues})
     """
-    if verbose:
-        print(
-            f"Quering sqlite database at {DBPATH} with `{q1}`.")
-
     with sqlite3.connect(DBPATH) as con:
         cur = con.cursor()
         cur.execute(q1, fetched_uids)
@@ -377,31 +325,43 @@ def update_fetched(df, query, verbose=True):
         cur.executemany(q2, data)
         res = cur.fetchall()
 
+    fetched_dates = df.datetime_utc.tolist()
+    q3 = f"""
+        UPDATE {table}
+        SET fetchDate=?
+        WHERE uid=?
+    """
+    data = [[date, uid] for date, uid in zip(fetched_dates, fetched_uids)]
+    with sqlite3.connect(DBPATH) as con:
+        cur = con.cursor()
+        cur.executemany(q3, data)
+        res = cur.fetchall()
 
-# def update_scraped(df, dr, query, verbose=True):
 
-#     # update main table
-#     table = query
-#     fetched_uids = df.uid.tolist()
-#     qvalues = ', '.join('?' for _ in range(len(df)))
-#     q1 = f"""
-#         UPDATE {table}
-#         SET scrapped = '1'
-#         WHERE uid in ({qvalues})
-#     """
-#     if verbose:
-#         print(
-#             f"Quering sqlite database at {DBPATH} with `{q1}`.")
+def update_scraped(df, dr, query, verbose=True):
 
-#     with sqlite3.connect(DBPATH) as con:
-#         cur = con.cursor()
-#         cur.execute(q1, fetched_uids)
-#         cur.fetchall()
+    # update main table
+    table = query
+    fetched_uids = df.uid.tolist()
+    qvalues = ', '.join('?' for _ in range(len(df)))
+    q1 = f"""
+        UPDATE {table}
+        SET scrapped = '1'
+        WHERE uid in ({qvalues})
+    """
+    if verbose:
+        print(
+            f"Quering sqlite database at {DBPATH} with `{q1}`.")
 
-#     # create and populate content table
-#     dr = pd.concat([df, dr], axis=1)
-#     table = f"{query}_htmlContent"
-#     columns = dr.columns.tolist()
-#     createTableIfNotExists(table, columns)
-#     records = dr.values.tolist()
-#     populateSqlite(table, records, columns)
+    with sqlite3.connect(DBPATH) as con:
+        cur = con.cursor()
+        cur.execute(q1, fetched_uids)
+        cur.fetchall()
+
+    # create and populate content table
+    dr = pd.concat([df, dr], axis=1)
+    table = f"{query}_htmlContent"
+    columns = dr.columns.tolist()
+    createTableIfNotExists(table, columns)
+    records = dr.values.tolist()
+    populateSqlite(table, records, columns)

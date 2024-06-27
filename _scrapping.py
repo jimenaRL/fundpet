@@ -5,10 +5,15 @@ import pandas as pd
 from tqdm import tqdm
 from argparse import ArgumentParser
 from scraper import ChangeOrg
-from utils import get_dbpath, \
+from utils import \
+    get_dbpath, \
+    get_fetch_paths
+from sqlite import \
     retrieve_table, \
-    get_fetch_paths, \
+    retrieve_not_fetched_urls_from_domain, \
+    update_fetched, \
     update_scraped
+
 
 ap = ArgumentParser()
 ap.add_argument('--config', type=str)
@@ -38,7 +43,7 @@ _, _, outdir = get_fetch_paths(query)
 # 1.Retrive data from table
 ########################################################
 table = query
-all_df = retrieve_table(DBPATH, table, verbose=True)
+all_df = retrieve_table(table, verbose=True)
 
 for domain in DOMAINSTOSCRAPE:
 

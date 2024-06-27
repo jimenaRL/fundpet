@@ -1,77 +1,45 @@
 import os
-import yaml
-import minet
-import pandas as pd
-from tqdm import tqdm
-from ural import get_domain_name
-from argparse import ArgumentParser
-from utils import \
-    get_date, \
-    get_dbpath
+from glob import glob
+
 from sqlite import \
     populateSqlite, \
-    retrieve_table, \
-    updateUrlCounts, \
-    updateDomainCounts
+    retrieve_table
 
-ap = ArgumentParser()
-ap.add_argument('--config', type=str)
-ap.add_argument('--query', type=str)
-args = ap.parse_args()
-config = args.config
-query = args.query
+def stats(query, logger):
 
-# 0. Set things
-########################################################
+    # 1. Retrive data from table
+    ########################################################
+    df = retrieve_table(table=query, verbose=True)
+    n = len(df)
 
-# load config and set parameters
-with open(config, "r") as fh:
-    config = yaml.load(fh, Loader=yaml.SafeLoader)
+    # 2. Make aggregations
+    ########################################################
 
-DOMAINNAMETHRESHOLD = config['queries'][query]['domain_freq_threshold']
-PLATFORMS = config['platforms']
+    # (2a) Agreggate URLs
+    url_counts = df['resolvedUrl'].value_counts()
+    url_counts = url_counts \
+        .to_frame() \
+        .reset_index() \
+        .rename(columns={"count": "urlCount"})
+    u = len(url_counts)
+    logger.info(
+        f"STATS: there are {u} unique urls of a total of {n} ({100*u/n:.2f}%)")
 
+    df = df.merge(url_counts, on='resolvedUrl')
+    df = df.groupby('resolvedUrl').first().reset_index() \
+        .sort_values(by='urlCount', ascending=False)
 
-# 1. Retrive data from table
-########################################################
-df = retrieve_table(table=query, verbose=True)
-n = len(df)
+    # (2b) Domains stats
+    domain_counts = df['domain'].value_counts()
+    domain_counts = domain_counts \
+        .to_frame() \
+        .reset_index() \
+        .rename(columns={"count": "domainCount"})
+    d1 = len(domain_counts)
 
-# 2. Make aggregations
-########################################################
+    logger.info(f"STATS: there are {d1} unique domains.")
 
-# (2a) Agreggate URLs
-print("~~~~~~~~~~~~~~~~~~~~~~~")
-url_counts = df['resolvedUrl'].value_counts()
-url_counts = url_counts \
-    .to_frame() \
-    .reset_index() \
-    .rename(columns={"count": "urlCount"})
-u = len(url_counts)
-print(
-    f"There are {u} unique urls of a total of {n} ({100*u/n:.2f}%)")
+    url_counts = url_counts[["resolvedUrl", "urlCount"]]
+    domain_counts = domain_counts[["domain", "domainCount"]]
 
-df = df.merge(url_counts, on='resolvedUrl')
-df = df.groupby('resolvedUrl').first().reset_index() \
-    .sort_values(by='urlCount', ascending=False)
-print("Most frequents Urls:")
-print(url_counts.head(10))
-
-# (2b) Domains stats
-print("~~~~~~~~~~~~~~~~~~~~~~~")
-domain_counts = df['domain'].value_counts()
-domain_counts = domain_counts \
-    .to_frame() \
-    .reset_index() \
-    .rename(columns={"count": "domainCount"})
-d1 = len(domain_counts)
-
-print(f"There are {d1} unique domains.")
-print("Most frequents domain names counts:")
-print(domain_counts.head(5))
-
-# 2. Make exports
-########################################################
-updateUrlCounts(query, url_counts[["resolvedUrl", "urlCount"]])
-
-updateDomainCounts(query, domain_counts[["domain", "domainCount"]])
+    return url_counts, domain_counts
