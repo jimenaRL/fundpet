@@ -16,9 +16,7 @@ query = args.query
 # first_monday
 m1 = datetime.strptime("2023-05-15", "%Y-%m-%d")
 
-# nb_weeks = 59
-
-nb_weeks = 2
+nb_weeks = 59
 
 form = "%Y-%m-%d"
 rng = range(1, nb_weeks+1)

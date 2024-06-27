@@ -63,8 +63,12 @@ ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 ENV PYTHONIOENCODING utf-8
 
 RUN apt-get update && \
-    apt-get install -y git && \
-    apt-get install -y nano
+    apt-get install build-essential -y
+
+RUN apt-get install -y git && \
+    apt-get install -y nano && \
+    apt-get install -y curl && \
+    apt-get install -y unzip
 
 ENV DATA /home/jimena/work/data
 ENV LFFOLDER $DATA/fundpet/linkfluence_petitioning_fundraising
@@ -83,6 +87,19 @@ RUN pip install minet==1.1.6
 RUN pip install trafilatura==1.6.2
 RUN pip install beautifulsoup4==4.12.2
 RUN pip install requests==2.31.0
+
+# install cargo and rust
+RUN curl https://sh.rustup.rs -sSf > rustup.sh
+RUN chmod 755 rustup.sh
+RUN ./rustup.sh -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN rustup default stable
+
+# installing minet and xan
+COPY install_minet.sh install_minet.sh
+RUN ./install_minet.sh
+RUN cargo install xan
 
 
 # build with
