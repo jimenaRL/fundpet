@@ -8,13 +8,9 @@ from dateutil.relativedelta import relativedelta, MO
 ap = ArgumentParser()
 ap.add_argument('--config', type=str, default="config.yaml")
 ap.add_argument('--query', type=str)
-ap.add_argument('--client_id', type=str)
-ap.add_argument('--client_secret', type=str)
 args = ap.parse_args()
 config = args.config
 query = args.query
-client_id = args.client_id
-client_secret = args.client_secret
 
 
 # first_monday
@@ -35,8 +31,6 @@ for start, end in zip(starts, ends):
     command_pipe = [
         "python",
         "pipeline.py",
-        f"--client_id={client_id}",
-        f"--client_secret={client_secret}",
         f"--start={start}",
         f"--end={end}",
         f"--query={query}"

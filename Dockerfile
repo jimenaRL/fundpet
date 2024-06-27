@@ -72,23 +72,23 @@ ENV LFFOLDER $DATA/fundpet/linkfluence_petitioning_fundraising
 # clone project repo
 ARG token
 ENV env_token $token
+WORKDIR /home/jimena/work/dev
 RUN git clone https://${env_token}@github.com/jimenaRL/fundpet.git
-WORKDIR /fundpet
-
-# RUN pip install -r requirements.txt
-
+WORKDIR /home/jimena/work/dev/fundpet
 
 RUN pip install tqdm==4.66.1
-RUN    pip install PyYAML==6.0.1
-RUN    pip install pandas==2.1.2
-RUN    pip install minet==1.1.6
-RUN    pip install trafilatura==1.6.2
-RUN    pip install beautifulsoup4==4.12.2
-RUN    pip install requests==2.31.0
+RUN pip install PyYAML==6.0.1
+RUN pip install pandas==2.1.2
+RUN pip install minet==1.1.6
+RUN pip install trafilatura==1.6.2
+RUN pip install beautifulsoup4==4.12.2
+RUN pip install requests==2.31.0
 
 
 # build with
-# docker build -t fundpet --build-arg token=$GITHUBTOCKEN -f Dockerfile .
+# docker build -t fundpet --build-arg token=$GIT_TOKEN -f Dockerfile .
 
 # run with
-# docker run -ti -v $LFFOLDER/fundpet.db:$LFFOLDER/fundpet.db fundpet
+# docker run -d --env-file=credentials.env -v /home/jimena/work/dev/fundpet/wip:/home/jimena/work/dev/fundpet/wip fundpet bash -c "python retrieve_past.py --query=SoMe4DemFrench"
+
+

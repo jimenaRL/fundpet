@@ -12,7 +12,8 @@ from fetch import fetch
 from preprocessing import preprocessDumps
 from utils import \
     get_date, \
-    get_dbpath
+    get_dbpath, \
+    getCredentials
 from sqlite import \
     updatePreprocessed, \
     updateUrlCounts, \
@@ -24,21 +25,18 @@ from sqlite import \
 ap = ArgumentParser()
 ap.add_argument('--config', type=str, default="config.yaml")
 ap.add_argument('--query', type=str)
-ap.add_argument('--client_id', type=str)
-ap.add_argument('--client_secret', type=str)
 ap.add_argument('--start', type=str, default=None)
 ap.add_argument('--end', type=str, default=None)
 args = ap.parse_args()
 config = args.config
 query = args.query
-client_id = args.client_id
-client_secret = args.client_secret
 start = args.start
 end = args.end
 
 # 0. set things
-start_timestamp, end_timestamp = get_date(start, end)
 
+client_id, client_secret = getCredentials()
+start_timestamp, end_timestamp = get_date(start, end)
 DBPATH = get_dbpath()
 
 with open(config, "r") as fh:
@@ -53,7 +51,7 @@ NBTHREADS = config['nb_threads_fetch']
 FETCHDOMAINS = config['queries'][query]['domains_to_fetch']
 
 now = strftime("%Y-%m-%d_%H:%M:%S", gmtime())
-logfile = f'logs/{query}_{now}.log'
+logfile = os.path.join(DBPATH, f'logs/{query}_{now}.log')
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,

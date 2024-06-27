@@ -10,13 +10,17 @@ VALIDFOLDERS = [
     'fetched'
 ]
 
-if 'LFFOLDER' not in os.environ:
-    raise ValueError('`LFFOLDER` environment variable must be set.')
-
+def getCredentials():
+    if 'LFCLIENTID' not in os.environ:
+        raise ValueError('`LFCLIENTID` environment variable must be set.')
+    if 'LFCLIENTSECRET' not in os.environ:
+        raise ValueError('`LFCLIENTSECRET` environment variable must be set.')
+    return os.environ['LFCLIENTID'], os.environ['LFCLIENTSECRET']
 
 def get_dbpath():
+    if 'LFFOLDER' not in os.environ:
+        raise ValueError('`LFFOLDER` environment variable must be set.')
     return os.path.join(os.environ['LFFOLDER'], 'fundpet.db')
-
 
 def get_folder(folder):
     if folder not in VALIDFOLDERS:
