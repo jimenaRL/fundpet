@@ -9,7 +9,7 @@
  
 ```
 0 Load dump
-1 Extract URLs from posts text
+1 Extract URLs from posts text using [ural](https://github.com/medialab/ural) 
 2 Explode list of found urls
 3 Remove bad formatted urls (empty, typos)
 4 Resolve urls
