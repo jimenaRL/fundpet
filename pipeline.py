@@ -13,6 +13,7 @@ from preprocessing import preprocessDumps
 from utils import \
     get_date, \
     get_dbpath, \
+    get_basepath, \
     getCredentials
 from sqlite import \
     updatePreprocessed, \
@@ -37,6 +38,7 @@ end = args.end
 
 client_id, client_secret = getCredentials()
 start_timestamp, end_timestamp = get_date(start, end)
+BASEPATH = get_basepath()
 DBPATH = get_dbpath()
 
 with open(config, "r") as fh:
@@ -51,7 +53,7 @@ NBTHREADS = config['nb_threads_fetch']
 FETCHDOMAINS = config['queries'][query]['domains_to_fetch']
 
 now = strftime("%Y-%m-%d_%H:%M:%S", gmtime())
-logfile = os.path.join(DBPATH, f'logs/{query}_{now}.log')
+logfile = os.path.join(BASEPATH, f'logs/{query}_{now}.log')
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
