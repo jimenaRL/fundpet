@@ -9,7 +9,7 @@
  
 ```
 0 Load dump
-1 Extract URLs from posts text
+1 Extract URLs from posts text using [ural](https://github.com/medialab/ural) 
 2 Explode list of found urls
 3 Remove bad formatted urls (empty, typos)
 4 Resolve urls
@@ -19,4 +19,9 @@
 8 Append suffix to LF uids
 9 Update SQLITE db with new valid entries
 ```
-## 3. FETCH WEBSITES
+
+## 3. COMPUTE STATS
+
+## 4. FETCH WEBSITES
+
+## 5. SCRAP CONTENT (to do)
