@@ -50,5 +50,6 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 ```
 0 Fetch html from urls in `SoMe4DemFrench` table which domain are in config.yml
 1 Update SoMe4DemFrench table with fetch information
+2 `This` is an inline code block! <code>This</code> is one too!
 ```
 ## 5. SCRAP CONTENT (to do)
