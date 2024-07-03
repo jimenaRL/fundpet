@@ -5,8 +5,6 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 ## 1. DOWNLOAD LF DUMP
 
 ## 2. PREPROCESS DATA
-
-
  
 ```
 0 Load dump
@@ -21,7 +19,12 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 9 Update SQLITE db with new valid entries
 ```
 
-## 3. COMPUTE STATS
+## 3. COMPUTE STATS TABLES ON SQLITE DB
+
+```
+0 Update url counts
+1 Update domain counts
+```
 
 ## 4. FETCH WEBSITES
 
