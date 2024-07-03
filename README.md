@@ -24,7 +24,7 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 
 `SoMe4DemFrench` table
 
-| - | permalink                 | uid                       | text                      | resolvedUrl               | platform | query          | domain   | date                     | fetched | fetchDate | -htmlPath | scrapped |
+| - | permalink                 | uid                       | text                      | resolvedUrl               | platform | query          | domain   | date                     | fetched | fetchDate | htmlPath | scrapped |
 | - | ------------------------- | ------------------------- | ------------------------- | ------------------------- | -------- | -------------- | -------- | ------------------------ | ------- | --------- | -------- | --------- |
 | 0 | https://x.com/FOTS352809… | r3_prod_5760-16580716141… | RT @mllesyara: Story vac… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-15T11:27:32.000Z | 0       | 0         | <empty>  | 0         |
 | 1 | https://x.com/mllesyara/… | r3_prod_5760-16584674874… | Être a mes pieds se méri… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:40:36.000Z | 0       | 0         | <empty>  | 0         |
