@@ -2,13 +2,13 @@
 
 Every week job for dutch, french,  german, italian, polish, romanian, and spanish.
 
-|   | domain          | domainCount |
+| - | domain          | domainCount |
 |---| --------------- | ----------- |
-|   | helloasso.com   | 25643       |
-|   | mesopinions.com | 20779       |
-|   | change.org      | 1054        |
-|   | teaming.net     | 124         |
-|   | wishtender.com  | 85          |
+| 1 | helloasso.com   | 25643       |
+| 2 | mesopinions.com | 20779       |
+| 3 | change.org      | 1054        |
+| 4 | teaming.net     | 124         |
+| 5 | wishtender.com  | 85          |
 
 
 ## 1. DOWNLOAD LF DUMP
