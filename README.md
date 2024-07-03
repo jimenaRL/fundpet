@@ -1,6 +1,6 @@
 # `fundpet`
 
-Every week job 
+Every week job for dutch, french,  german, italian, polish, romanian, and spanish.
 
 ## 1. DOWNLOAD LF DUMP
 
