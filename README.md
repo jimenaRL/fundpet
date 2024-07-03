@@ -46,4 +46,9 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 
 ## 4. FETCH WEBSITES
 
+
+```
+0 Fetch html from urls in `SoMe4DemFrench` table which domain are in config.yml
+1 Update SoMe4DemFrench table with fetch information
+```
 ## 5. SCRAP CONTENT (to do)
