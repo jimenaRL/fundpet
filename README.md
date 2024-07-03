@@ -2,6 +2,21 @@
 
 Every week job for dutch, french,  german, italian, polish, romanian, and spanish.
 
+| Column 1      | Column 2      |
+| ------------- | ------------- |
+| Cell 1, Row 1 | Cell 2, Row 1 |
+| Cell 1, Row 2 | Cell 1, Row 2 |
+
+┌───┬─────────────────┬─────────────┐
+│ - │ domain          │ domainCount │
+├───┼─────────────────┼─────────────┤
+│ 0 │ helloasso.com   │ 25643       │
+│ 1 │ mesopinions.com │ 20779       │
+│ 2 │ change.org      │ 1054        │
+│ 3 │ teaming.net     │ 124         │
+│ 4 │ wishtender.com  │ 85          │
+└───┴─────────────────┴─────────────
+
 ## 1. DOWNLOAD LF DUMP
 
 ## 2. PREPROCESS DATA
