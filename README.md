@@ -1,16 +1,5 @@
 # `fundpet`
 
-
-| - | permalink                 | uid                       | text                      | resolvedUrl               | platform | query          | domain   | date                     | fetched | fetchDate | htmlPath | scrapped |
-| - | ------------------------- | ------------------------- | ------------------------- | ------------------------- | -------- | -------------- | -------- | ------------------------ | ------- | --------- | -------- | -------- |
-| 0 | https://x.com/FOTS352809… | r3_prod_5760-16580716141… | RT @mllesyara: Story vac… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-15T11:27:32.000Z | 0       | 0         | <empty>  | 0        |
-| 1 | https://x.com/mllesyara/… | r3_prod_5760-16584674874… | Être a mes pieds se méri… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:40:36.000Z | 0       | 0         | <empty>  | 0        |
-| 2 | https://x.com/GogGogy/st… | r3_prod_5760-16584685643… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:44:53.000Z | 0       | 0         | <empty>  | 0        |
-| 3 | https://x.com/VLemois/st… | r3_prod_5760-16584789348… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T14:26:05.000Z | 0       | 0         | <empty>  | 0        |
-| 4 | https://x.com/mllesyara/… | r3_prod_5760-16587862274… | 40€ a rembourser sur pay… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-17T10:47:10.000Z | 0       | 0         | <empty>  | 0        |
-
-
-
 Every week job for dutch, french,  german, italian, polish, romanian, and spanish.
 
 `SoMe4DemFrench_urlCounts` table
@@ -35,13 +24,14 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 
 `SoMe4DemFrench` table
 
+
 | - | permalink                 | uid                       | text                      | resolvedUrl               | platform | query          | domain   | date                     | fetched | fetchDate | htmlPath | scrapped |
-| - | ------------------------- | ------------------------- | ------------------------- | ------------------------- | -------- | -------------- | -------- | ------------------------ | ------- | --------- | -------- | --------- |
-| 0 | https://x.com/FOTS352809… | r3_prod_5760-16580716141… | RT @mllesyara: Story vac… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-15T11:27:32.000Z | 0       | 0         | <empty>  | 0         |
-| 1 | https://x.com/mllesyara/… | r3_prod_5760-16584674874… | Être a mes pieds se méri… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:40:36.000Z | 0       | 0         | <empty>  | 0         |
-| 2 | https://x.com/GogGogy/st… | r3_prod_5760-16584685643… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:44:53.000Z | 0       | 0         | <empty>  | 0         |
-| 3 | https://x.com/VLemois/st… | r3_prod_5760-16584789348… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T14:26:05.000Z | 0       | 0         | <empty>  | 0         |
-| 4 | https://x.com/mllesyara/… | r3_prod_5760-16587862274… | 40€ a rembourser sur pay… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-17T10:47:10.000Z | 0       | 0         | <empty>  | 0         |
+| - | ------------------------- | ------------------------- | ------------------------- | ------------------------- | -------- | -------------- | -------- | ------------------------ | ------- | ----------------- | -------- | -------- |
+│ 0 │ https://x.com/cream_ild/… │ r3_prod_5760-165…         │ Si vous êtes con…         │ https://www.meso…         │ twitter  │ SoMe4DemFrench │ mesopinions.com │ 2023-05-15T11:28… │ 1       │ 2024-06-27T16:39… │ mesopinions.com/… │ 0        │
+| 1 | https://x.com/mllesyara/… | r3_prod_5760-16584674874… | Être a mes pieds se méri… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:40:36.000Z | 0       | 0                 | <empty>  | 0        |
+| 2 | https://x.com/GogGogy/st… | r3_prod_5760-16584685643… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T13:44:53.000Z | 0       | 0         | <empty>  | 0        |
+| 3 | https://x.com/VLemois/st… | r3_prod_5760-16584789348… | RT @mllesyara: Être a me… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-16T14:26:05.000Z | 0       | 0         | <empty>  | 0        |
+| 4 | https://x.com/mllesyara/… | r3_prod_5760-16587862274… | 40€ a rembourser sur pay… | https://support.verse.me… | twitter  | SoMe4DemFrench | verse.me | 2023-05-17T10:47:10.000Z | 0       | 0         | <empty>  | 0        |
 
 
 
