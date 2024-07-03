@@ -11,6 +11,15 @@ Every week job for dutch, french,  german, italian, polish, romanian, and spanis
 | 5 | wishtender.com  | 85          |
 
 
+| - | resolvedUrl                                                                            | urlCount |
+|---| -------------------------------------------------------------------------------------- | -------- |
+| 1 | https://www.mesopinions.com/fr                                                         | 28239    |
+| 2 | https://www.helloasso.com/page-introuvable                                             | 1885     |
+| 3 | https://www.l214.com/enquetes/2023/abattoir-de-bazas/                                  | 1655     |
+| 4 | https://www.change.org/p/maintenir-l-allocation-sp%C                                   | 1347     |
+| 5 | https://www.helloasso.com/associations/association-urgences-fourrieres/formulaires/2   | 782      |
+
+
 ## 1. DOWNLOAD LF DUMP
 
 ## 2. PREPROCESS DATA
