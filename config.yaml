@@ -23,6 +23,10 @@ ignored_urls:
   - https://www.mesopinions.com/fr
   - https://support.verse.me/hc/es
   - https://www.mesopinions.com/fr
+  - https://www.helloasso.com/page-introuvable
+  - https://support.verse.me/hc/es
+  - https://350.org/?r=FR&c=EU
+  - https://www.petizioni.com/
 ignored_urls_same_as_domain:
   - change.org
   - doneeractie.nl
@@ -34,7 +38,7 @@ ignored_urls_same_as_domain:
 queries:
   SoMe4DemDutch:
     id: 398400
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - doneeractie.nl
       - petities.nl
@@ -49,7 +53,7 @@ queries:
       - change.org
   SoMe4DemGerman:
     id: 398397
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - change.org
       - innn.it
@@ -59,12 +63,12 @@ queries:
       - spendenseite.de
   SoMe4DemItalian:
     id: 398396
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - change.org
   SoMe4DemPolish:
     id: 398398
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - zrzutka.pl
       - pomagam.pl
@@ -72,12 +76,12 @@ queries:
       - klubjagiellonski.pl
   SoMe4DemSpanish:
     id: 398395
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
       - avaaz.org
       - change.org
   SoMe4DemRomanian:
     id: 398399
-    warning_domain_freq_threshold: 1
+    warning_domain_freq_threshold: 10
     domains_to_fetch:
         - change.org
