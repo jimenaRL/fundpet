@@ -25,6 +25,7 @@ def preprocessDumps(
     platforms,
     domain_freq_threshold,
     ignored_domains,
+    ignored_urls,
     ignored_urls_same_as_domain,
     logger):
 
@@ -127,6 +128,15 @@ def preprocessDumps(
         if d > 0:
             logger.info(
                 f"PREPROCESS: drop {d} entries with url equal to its domain {domain}.")
+
+
+    # (1d) Drop unwanted
+    for url in ignored_urls:
+        n = len(df[df.resolvedUrl == url])
+        if n > 0:
+            logger.info(f"Removing {n} entries whose resolvedUrl is {url}")
+            df = df[df.resolvedUrl != url]
+
 
     # 2. Export processed data to sql table
     ########################################################

@@ -49,6 +49,7 @@ PLATFORMS = config['platforms']
 FREQFETCHDOMAINS = config['queries'][query]['warning_domain_freq_threshold']
 IGNOREDOMAINS = config['ignored_domains']
 IGNOREURLSSAMEASDOM = config['ignored_urls_same_as_domain']
+IGNOREURLS = config['ignored_urls']
 NBTHREADS = config['nb_threads_fetch']
 FETCHDOMAINS = config['queries'][query]['domains_to_fetch']
 
@@ -89,6 +90,7 @@ df = preprocessDumps(
     platforms=PLATFORMS,
     domain_freq_threshold=FREQFETCHDOMAINS,
     ignored_domains=IGNOREDOMAINS,
+    ignored_urls=IGNOREURLS,
     ignored_urls_same_as_domain=IGNOREURLSSAMEASDOM,
     logger=logger)
 
